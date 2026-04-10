@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'User/LauncherPage.dart';
 import 'User/Notifications/Notifications Services.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,12 +17,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'German Language',
       debugShowCheckedModeBanner: false,
-      darkTheme: ThemeData.dark(),
-      theme: ThemeData(
-        fontFamily: "Poppins",
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF005D80)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
       home: const FirstLaunchHandler(),
     );
