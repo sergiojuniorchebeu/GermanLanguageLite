@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:projet2/core/data/exam_catalog.dart';
-import 'package:projet2/core/services/challenge_service.dart';
 import 'package:projet2/core/services/progress_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
 import 'package:projet2/User/Widget/Widget.dart';
 import 'package:projet2/User/Widget/Drawer.dart';
-import 'package:projet2/features/clinical_cases/clinical_cases_page.dart';
-import 'package:projet2/features/challenges/weekly_challenges_page.dart';
-import 'package:projet2/features/conversation/conversation_drills_page.dart';
-import 'package:projet2/features/exams/exam_page.dart';
-import 'package:projet2/features/expressions/professional_expressions_page.dart';
 
 import '../Chapitre/1/liste lecon chapitre1.dart';
 import '../Chapitre/2/List Lesson Chaiptre 2.dart';
@@ -38,43 +31,37 @@ class _HomeUserPageState extends State<HomeUserPage> {
 
   String _userName = 'Apprenant';
   String _searchQuery = '';
-  int _streak = 0;
-  int _xp = 0;
   int _level = 1;
   Map<int, double> _chapterProgresses = const {};
-  int _completedWeeklyChallenges = 0;
-  int _totalWeeklyChallenges = 3;
-  String _nextWeeklyChallenge = 'Réussir 3 quiz';
-  int _finalExamBestScore = 0;
 
   // ── Données de tous les chapitres ────────────────────────────────────────
   late final List<ChapterData> _allChapters = [
-    ChapterData(
+    const ChapterData(
       number: 1,
       titleFR: "L'admission d'un patient",
       titleDE: "Die Aufnahme eines Patienten",
       accentColor: kBlue,
       accentLight: kBlueLight,
       icon: Icons.assignment_ind_outlined,
-      page: const LessonListPage(),
+      page: LessonListPage(),
     ),
-    ChapterData(
+    const ChapterData(
       number: 2,
       titleFR: "La mesure des paramètres",
       titleDE: "Die Messung der Parameter",
       accentColor: kGreen,
       accentLight: kGreenLight,
       icon: Icons.monitor_heart_outlined,
-      page: const LessonListPage2(),
+      page: LessonListPage2(),
     ),
-    ChapterData(
+    const ChapterData(
       number: 3,
       titleFR: "Manger – boire – éliminer",
       titleDE: "Essen – trinken – ausscheiden",
       accentColor: kPurple,
       accentLight: kPurpleLight,
       icon: Icons.restaurant_outlined,
-      page: const LessonListPage3(),
+      page: LessonListPage3(),
     ),
     ChapterData(
       number: 4,
@@ -180,21 +167,6 @@ class _HomeUserPageState extends State<HomeUserPage> {
         .toList();
   }
 
-  // ── Salutation dynamique ─────────────────────────────────────────────────
-  String get _greeting {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'Guten Morgen';
-    if (h < 18) return 'Guten Tag';
-    return 'Guten Abend';
-  }
-
-  String get _greetingEmoji {
-    final h = DateTime.now().hour;
-    if (h < 12) return '☀️';
-    if (h < 18) return '🌤️';
-    return '🌙';
-  }
-
   @override
   void initState() {
     super.initState();
@@ -210,25 +182,13 @@ class _HomeUserPageState extends State<HomeUserPage> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final xp = await ProgressService.getXP();
-    final streak = await ProgressService.getStreak();
     final progresses = await ProgressService.getAllChapterProgresses();
     final levelInfo = ProgressService.getLevelInfoFromXP(xp);
-    final challengeSummary = await ChallengeService.getWeeklySummary();
-    final finalExamBestScore = await ProgressService.getFinalExamBestScore();
-    final nextChallenge = challengeSummary['next'];
     if (!mounted) return;
     setState(() {
       _userName = prefs.getString('name') ?? 'Apprenant';
-      _streak = streak;
-      _xp = xp;
       _level = levelInfo.level;
       _chapterProgresses = progresses;
-      _completedWeeklyChallenges = challengeSummary['completed'] as int? ?? 0;
-      _totalWeeklyChallenges = challengeSummary['total'] as int? ?? 3;
-      _nextWeeklyChallenge = nextChallenge is WeeklyChallenge
-          ? nextChallenge.description
-          : 'Réussir 3 quiz';
-      _finalExamBestScore = finalExamBestScore;
     });
   }
 
@@ -244,9 +204,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _buildHeader()),
-            SliverToBoxAdapter(child: _buildStatsStrip()),
-            SliverToBoxAdapter(child: _buildMvp2Shortcuts()),
-            SliverToBoxAdapter(child: _buildMvp3Shortcuts()),
+            SliverToBoxAdapter(child: _buildPromoCard()),
             SliverToBoxAdapter(child: _buildSearchBar()),
             SliverToBoxAdapter(child: _buildSectionTitle()),
             SliverPadding(
@@ -287,7 +245,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
   // ── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -295,47 +253,23 @@ class _HomeUserPageState extends State<HomeUserPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      _greetingEmoji,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _greeting,
-                      style: AppText.bodyM.copyWith(color: kInk500),
-                    ),
-                  ],
+                Text(
+                  'Allemand médical',
+                  style: AppText.labelS.copyWith(
+                    color: kBlue,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   _userName,
                   style: AppText.h2,
                 ),
-                const SizedBox(height: 8),
-                // Pill "German Language"
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: kBlueLight,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('🇩🇪', style: TextStyle(fontSize: 12)),
-                      const SizedBox(width: 5),
-                      Text(
-                        'German Language v2',
-                        style: AppText.labelS.copyWith(
-                          color: kBlue,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  'Révision ciblée, examens et pratique clinique.',
+                  style: AppText.bodyS.copyWith(color: kInk500),
                 ),
               ],
             ),
@@ -366,200 +300,88 @@ class _HomeUserPageState extends State<HomeUserPage> {
     );
   }
 
-  // ── Stats strip ──────────────────────────────────────────────────────────
-  Widget _buildStatsStrip() {
+  Widget _buildPromoCard() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: kBorder),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _StatItem(
-              icon: Icons.local_fire_department_rounded,
-              value: '$_streak',
-              label: 'Streak',
-              color: kPeach,
-            ),
-            Container(width: 1, height: 38, color: kBorder),
-            _StatItem(
-              icon: Icons.bolt_rounded,
-              value: '$_xp',
-              label: 'XP',
-              color: kYellow,
-            ),
-            Container(width: 1, height: 38, color: kBorder),
-            _StatItem(
-              icon: Icons.workspace_premium_rounded,
-              value: '$_level',
-              label: 'Niveau',
-              color: kBlue,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [kBlue, kPurple],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: kBlue.withOpacity(0.14),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildMvp2Shortcuts() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const WeeklyChallengesPage()),
-            ).then((_) => _loadUserData()),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kBorder),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: kBlueLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.flag_rounded, color: kBlue),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Défis hebdomadaires', style: AppText.labelL),
-                        Text(
-                          '$_completedWeeklyChallenges / $_totalWeeklyChallenges complétés · $_nextWeeklyChallenge',
-                          style: AppText.bodyS.copyWith(color: kInk500),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 14, color: kInk500),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ExamPage.finalExam(
-                  title: 'Examen final',
-                  subtitle: 'Révision globale des chapitres 1 à 11',
-                  accentColor: kPurple,
-                  accentLight: kPurpleLight,
-                  phrases: buildFinalExamPool(),
-                ),
-              ),
-            ).then((_) => _loadUserData()),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kBorder),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: kPurpleLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.workspace_premium_rounded,
-                        color: kPurple),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Examen final', style: AppText.labelL),
-                        Text(
-                          _finalExamBestScore > 0
-                              ? 'Meilleur score: $_finalExamBestScore%'
-                              : '16 questions mixtes basées sur les leçons existantes',
-                          style: AppText.bodyS.copyWith(color: kInk500),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 14, color: kInk500),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMvp3Shortcuts() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: SizedBox(
-        height: 138,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
+        child: Row(
           children: [
-            _ShortcutCard(
-              title: 'Fiches de conversation',
-              subtitle: 'Admission, douleur, urgence, sortie',
-              icon: Icons.chat_bubble_outline_rounded,
-              accentColor: kBlue,
-              accentLight: kBlueLight,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const ConversationDrillsPage()),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Niveau $_level',
+                      style: AppText.caption.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Pratique ton allemand médical',
+                    style: AppText.h3.copyWith(
+                      color: Colors.white,
+                      fontSize: 18,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Retrouve les chapitres et les exercices depuis le menu.',
+                    style: AppText.bodyS.copyWith(
+                      color: Colors.white.withOpacity(0.82),
+                      height: 1.35,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            _ShortcutCard(
-              title: 'Expressions pro',
-              subtitle: 'Patient, médecin, transmission',
-              icon: Icons.record_voice_over_rounded,
-              accentColor: kPurple,
-              accentLight: kPurpleLight,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ProfessionalExpressionsPage(),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 0.9,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Image.asset(
+                      'assets/img/online-course.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            _ShortcutCard(
-              title: 'Cas cliniques',
-              subtitle: 'Mises en situation courtes',
-              icon: Icons.local_hospital_outlined,
-              accentColor: kCoral,
-              accentLight: kCoralLight,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ClinicalCasesPage()),
               ),
             ),
           ],
@@ -627,106 +449,6 @@ class _HomeUserPageState extends State<HomeUserPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Stat item widget (interne)
-// ─────────────────────────────────────────────────────────────────────────────
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  const _StatItem({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 20, color: color),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: AppText.h3.copyWith(fontSize: 17, color: kInk900),
-        ),
-        const SizedBox(height: 1),
-        Text(label, style: AppText.labelS),
-      ],
-    );
-  }
-}
-
-class _ShortcutCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color accentColor;
-  final Color accentLight;
-  final VoidCallback onTap;
-
-  const _ShortcutCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.accentColor,
-    required this.accentLight,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 220,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: kBorder),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: accentLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: accentColor, size: 20),
-            ),
-            const SizedBox(height: 10),
-            Text(title,
-                style: AppText.labelL,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 3),
-            Expanded(
-              child: Text(
-                subtitle,
-                style: AppText.bodyS.copyWith(
-                  color: kInk500,
-                  fontSize: 11,
-                  height: 1.25,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -3,10 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
 import 'package:projet2/core/services/progress_service.dart';
+import 'package:projet2/core/data/exam_catalog.dart';
 import 'package:projet2/User/Views/Edit%20Profile.dart';
 import 'package:projet2/User/Views/HomeUserPage.dart';
 import 'package:projet2/User/Views/Settings.dart';
 import 'package:projet2/User/Widget/Navigation.dart';
+import 'package:projet2/features/challenges/weekly_challenges_page.dart';
+import 'package:projet2/features/conversation/conversation_drills_page.dart';
+import 'package:projet2/features/expressions/professional_expressions_page.dart';
+import 'package:projet2/features/clinical_cases/clinical_cases_page.dart';
+import 'package:projet2/features/exams/exam_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -39,8 +45,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     setState(() {
       _userName = prefs.getString('name') ?? 'Guest';
       _userEmail = prefs.getString('email') ?? '';
-      _userInitial =
-          _userName.isNotEmpty ? _userName[0].toUpperCase() : 'G';
+      _userInitial = _userName.isNotEmpty ? _userName[0].toUpperCase() : 'G';
       _streak = streak;
       _xp = xp;
       _level = levelInfo.level;
@@ -98,13 +103,72 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     MaterialPageRoute(builder: (_) => const HomeUserPage()),
                   ),
                 ),
-
+                _DrawerItem(
+                  icon: CupertinoIcons.flag_fill,
+                  title: 'Défis hebdomadaires',
+                  color: kBlue,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const WeeklyChallengesPage(),
+                    ),
+                  ),
+                ),
+                _DrawerItem(
+                  icon: CupertinoIcons.doc_text_search,
+                  title: 'Examen final',
+                  color: kPurple,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ExamPage.finalExam(
+                        title: 'Examen final',
+                        subtitle: 'Révision globale des chapitres 1 à 11',
+                        accentColor: kPurple,
+                        accentLight: kPurpleLight,
+                        phrases: buildFinalExamPool(),
+                      ),
+                    ),
+                  ),
+                ),
+                _DrawerItem(
+                  icon: CupertinoIcons.chat_bubble_2_fill,
+                  title: 'Fiches de conversation',
+                  color: kBlue,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ConversationDrillsPage(),
+                    ),
+                  ),
+                ),
+                _DrawerItem(
+                  icon: CupertinoIcons.person_2_square_stack_fill,
+                  title: 'Expressions pro',
+                  color: kPurple,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProfessionalExpressionsPage(),
+                    ),
+                  ),
+                ),
+                _DrawerItem(
+                  icon: CupertinoIcons.heart_circle_fill,
+                  title: 'Cas cliniques',
+                  color: kCoral,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ClinicalCasesPage(),
+                    ),
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Divider(color: kBorder, thickness: 1, height: 1),
                 ),
-
                 _DrawerItem(
                   icon: CupertinoIcons.settings,
                   title: 'Paramètres',
