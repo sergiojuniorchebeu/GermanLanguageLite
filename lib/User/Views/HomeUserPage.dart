@@ -1,42 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:projet2/User/Widget/Drawer.dart';
 import 'package:projet2/User/Widget/Widget.dart';
+import 'package:projet2/User/Widget/chapter_catalog.dart';
+import 'package:projet2/core/services/challenge_service.dart';
 import 'package:projet2/core/services/progress_service.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
+import 'package:projet2/features/challenges/weekly_challenges_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../Chapitre/1/liste lecon chapitre1.dart';
-import '../Chapitre/10/Lesson List 10.dart';
-import '../Chapitre/11/List Lesson 11.dart';
-import '../Chapitre/2/List Lesson Chaiptre 2.dart';
-import '../Chapitre/3/List Lesson 3.dart';
-import '../Chapitre/4/Liste Lecons 4.dart';
-import '../Chapitre/5/Liste des Lessons 5.dart';
-import '../Chapitre/6/List cours 6.dart';
-import '../Chapitre/7/Liste Lesson 7.dart';
-import '../Chapitre/8/List Lesson Page 8.dart';
-import '../Chapitre/9/Liste lesson 9.dart';
-
-import 'package:flutter/material.dart';
-import 'package:projet2/User/Widget/Drawer.dart';
-import 'package:projet2/User/Widget/Widget.dart';
-import 'package:projet2/core/services/progress_service.dart';
-import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/core/theme/text_styles.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../Chapitre/1/liste lecon chapitre1.dart';
-import '../Chapitre/10/Lesson List 10.dart';
-import '../Chapitre/11/List Lesson 11.dart';
-import '../Chapitre/2/List Lesson Chaiptre 2.dart';
-import '../Chapitre/3/List Lesson 3.dart';
-import '../Chapitre/4/Liste Lecons 4.dart';
-import '../Chapitre/5/Liste des Lessons 5.dart';
-import '../Chapitre/6/List cours 6.dart';
-import '../Chapitre/7/Liste Lesson 7.dart';
-import '../Chapitre/8/List Lesson Page 8.dart';
-import '../Chapitre/9/Liste lesson 9.dart';
 
 class HomeUserPage extends StatefulWidget {
   const HomeUserPage({super.key});
@@ -47,165 +18,15 @@ class HomeUserPage extends StatefulWidget {
 
 class _HomeUserPageState extends State<HomeUserPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _searchController = TextEditingController();
 
   String _userName = 'Apprenant';
-  String _searchQuery = '';
   LevelInfo _levelInfo = ProgressService.getLevelInfoFromXP(0);
   int _streak = 0;
   String _lastActiveDate = '';
   Map<int, double> _chapterProgresses = const {};
+  List<WeeklyChallenge> _weeklyChallenges = const [];
 
-  late final List<ChapterData> _allChapters = [
-    const ChapterData(
-      number: 1,
-      titleFR: "L'admission d'un patient",
-      titleDE: 'Die Aufnahme eines Patienten',
-      accentColor: kBlue,
-      accentLight: kBlueLight,
-      icon: Icons.assignment_ind_outlined,
-      page: LessonListPage(),
-      //imagePath: 'assets/img/scrub.png',
-    ),
-    const ChapterData(
-      number: 2,
-      titleFR: 'La mesure des parametres',
-      titleDE: 'Die Messung der Parameter',
-      accentColor: kGreen,
-      accentLight: kGreenLight,
-      icon: Icons.monitor_heart_outlined,
-      page: LessonListPage2(),
-      //imagePath: 'assets/img/ch2.png',
-    ),
-    const ChapterData(
-      number: 3,
-      titleFR: 'Manger - boire - eliminer',
-      titleDE: 'Essen - trinken - ausscheiden',
-      accentColor: kPurple,
-      accentLight: kPurpleLight,
-      icon: Icons.restaurant_outlined,
-      page: LessonListPage3(),
-      //imagePath: 'assets/img/ch3.png',
-    ),
-    const ChapterData(
-      number: 4,
-      titleFR: "Les soins d'hygiene",
-      titleDE: 'Die Grundpflege',
-      accentColor: kPeach,
-      accentLight: kPeachLight,
-      icon: Icons.clean_hands_outlined,
-      page: LessonList4Page(),
-      //imagePath: 'assets/img/ch4.png',
-    ),
-    const ChapterData(
-      number: 5,
-      titleFR: 'La physiopathologie',
-      titleDE: 'Die Pathophysiologie',
-      accentColor: kCoral,
-      accentLight: kCoralLight,
-      icon: Icons.biotech_outlined,
-      page: LessonList5Page(),
-      //imagePath: 'assets/img/ch5.png',
-    ),
-    const ChapterData(
-      number: 6,
-      titleFR: 'Les examens complementaires',
-      titleDE: 'Die Untersuchungen',
-      accentColor: kYellow,
-      accentLight: kYellowLight,
-      icon: Icons.science_outlined,
-      page: LessonList6Page(),
-      //imagePath: 'assets/img/ch6.png',
-    ),
-    const ChapterData(
-      number: 7,
-      titleFR: 'Labo - prelevement',
-      titleDE: 'Labor - Entnahme',
-      accentColor: kBlue,
-      accentLight: kBlueLight,
-      icon: Icons.colorize_outlined,
-      page: LessonList7Page(),
-      //imagePath: 'assets/img/ch7.png',
-    ),
-    const ChapterData(
-      number: 8,
-      titleFR: "L'anesthesie & l'operation",
-      titleDE: 'Die Anasthesie & die Operation',
-      accentColor: kGreen,
-      accentLight: kGreenLight,
-      icon: Icons.local_hospital_outlined,
-      page: LessonList8Page(),
-      //imagePath: 'assets/img/ch8.png',
-    ),
-    const ChapterData(
-      number: 9,
-      titleFR: 'Les soins therapeutiques',
-      titleDE: 'Die Behandlungspflege',
-      accentColor: kPurple,
-      accentLight: kPurpleLight,
-      icon: Icons.medication_outlined,
-      page: LessonList9Page(),
-      //imagePath: 'assets/img/ch9.png',
-    ),
-    const ChapterData(
-      number: 10,
-      titleFR: 'La conduite a tenir en urgence',
-      titleDE: 'Das Verhalten im Notfall',
-      accentColor: kCoral,
-      accentLight: kCoralLight,
-      icon: Icons.emergency_outlined,
-      page: LessonList10Page(),
-      //imagePath: 'assets/img/ch10.png',
-    ),
-    const ChapterData(
-      number: 11,
-      titleFR: 'La sortie & le transfert',
-      titleDE: 'Die Entlassung & Verlegung',
-      accentColor: kPeach,
-      accentLight: kPeachLight,
-      icon: Icons.transfer_within_a_station_outlined,
-      page: LessonList11Page(),
-      //imagePath: 'assets/img/ch11.png',
-    ),
-    const ChapterData(
-      number: 12,
-      titleFR: "L'anatomie",
-      titleDE: 'Die Anatomie',
-      accentColor: kInk500,
-      accentLight: kInk100,
-      icon: Icons.accessibility_new_outlined,
-      isComingSoon: true,
-      //imagePath: 'assets/img/ch12.png',
-    ),
-    const ChapterData(
-      number: 13,
-      titleFR: 'Les abreviations',
-      titleDE: 'Die Abkurzungen',
-      accentColor: kInk500,
-      accentLight: kInk100,
-      icon: Icons.abc_outlined,
-      isComingSoon: true,
-      //imagePath: 'assets/img/ch13.png',
-    ),
-  ];
-
-  List<ChapterData> get _filteredChapters {
-    if (_searchQuery.isEmpty) return _allChapters;
-    final q = _searchQuery.toLowerCase();
-    return _allChapters
-        .where(
-          (c) =>
-      c.titleFR.toLowerCase().contains(q) ||
-          c.titleDE.toLowerCase().contains(q),
-    )
-        .toList();
-  }
-
-  int get _completedCount =>
-      _chapterProgresses.values.where((v) => v >= 1).length;
-
-  int get _startedCount =>
-      _chapterProgresses.values.where((v) => v > 0).length;
+  late final List<ChapterData> _allChapters = buildStudentChapters();
 
   ChapterData? get _currentChapter {
     ChapterData? best;
@@ -250,17 +71,12 @@ class _HomeUserPageState extends State<HomeUserPage> {
     _loadUserData();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final xp = await ProgressService.getXP();
     final streak = await ProgressService.getStreak();
     final progresses = await ProgressService.getAllChapterProgresses();
+    final weeklyChallenges = await ChallengeService.getWeeklyChallenges();
     final levelInfo = ProgressService.getLevelInfoFromXP(xp);
     if (!mounted) return;
     setState(() {
@@ -269,6 +85,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
       _streak = streak;
       _lastActiveDate = prefs.getString('last_active_date') ?? '';
       _chapterProgresses = progresses;
+      _weeklyChallenges = weeklyChallenges;
     });
   }
 
@@ -282,8 +99,6 @@ class _HomeUserPageState extends State<HomeUserPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth >= 760;
-            final crossAxisCount = isWide ? 3 : 2;
-            final cardExtent = isWide ? 226.0 : 214.0;
 
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -306,46 +121,21 @@ class _HomeUserPageState extends State<HomeUserPage> {
                         _buildStreakSection(),
                         const SizedBox(height: 20),
                         _buildContinueCard(),
-                        const SizedBox(height: 20),
-                        _buildSearchBar(),
                         const SizedBox(height: 24),
                         _buildSectionTitle(),
                       ],
                     ),
                   ),
                 ),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    isWide ? 28 : 20,
-                    0,
-                    isWide ? 28 : 20,
-                    24,
-                  ),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                        final chapter = _filteredChapters[index];
-                        return ChapterCard(
-                          chapter: chapter,
-                          progress: _chapterProgresses[chapter.number] ?? 0,
-                          onTap: chapter.page == null
-                              ? null
-                              : () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => chapter.page!,
-                            ),
-                          ).then((_) => _loadUserData()),
-                        );
-                      },
-                      childCount: _filteredChapters.length,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      isWide ? 28 : 20,
+                      0,
+                      isWide ? 28 : 20,
+                      24,
                     ),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      mainAxisSpacing: 14,
-                      crossAxisSpacing: 14,
-                      mainAxisExtent: cardExtent,
-                    ),
+                    child: _buildWeeklyChallengesSection(isWide),
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -422,12 +212,11 @@ class _HomeUserPageState extends State<HomeUserPage> {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: kBorder),
               boxShadow: const [
-                BoxShadow(
-                    color: kShadow, blurRadius: 16, offset: Offset(0, 6)),
+                BoxShadow(color: kShadow, blurRadius: 16, offset: Offset(0, 6)),
               ],
             ),
-            child: const Icon(Icons.grid_view_rounded,
-                color: kInk900, size: 20),
+            child:
+                const Icon(Icons.grid_view_rounded, color: kInk900, size: 20),
           ),
         ),
       ],
@@ -547,9 +336,8 @@ class _HomeUserPageState extends State<HomeUserPage> {
                     fontFamily: 'Poppins',
                     color: fg,
                     fontSize: 13,
-                    fontWeight: isActive || isToday
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                    fontWeight:
+                        isActive || isToday ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -573,9 +361,9 @@ class _HomeUserPageState extends State<HomeUserPage> {
       onTap: chapter.page == null
           ? null
           : () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => chapter.page!),
-      ).then((_) => _loadUserData()),
+                context,
+                MaterialPageRoute(builder: (_) => chapter.page!),
+              ).then((_) => _loadUserData()),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final cardWidth = constraints.maxWidth;
@@ -663,10 +451,9 @@ class _HomeUserPageState extends State<HomeUserPage> {
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 6,
-                        backgroundColor:
-                        Colors.white.withValues(alpha: 0.12),
+                        backgroundColor: Colors.white.withValues(alpha: 0.12),
                         valueColor:
-                        const AlwaysStoppedAnimation<Color>(kFlagGold),
+                            const AlwaysStoppedAnimation<Color>(kFlagGold),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -708,71 +495,6 @@ class _HomeUserPageState extends State<HomeUserPage> {
     );
   }
 
-  // ── Barre de recherche ────────────────────────────────────────────────────
-
-  Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kBorder),
-        boxShadow: const [
-          BoxShadow(color: kShadow, blurRadius: 16, offset: Offset(0, 6)),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) => setState(() => _searchQuery = value),
-        style: AppText.bodyM.copyWith(color: kInk900),
-        decoration: InputDecoration(
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          hintText: 'Rechercher un chapitre...',
-          prefixIcon: const Padding(
-            padding: EdgeInsets.only(left: 14, right: 8),
-            child: Icon(Icons.search_rounded, color: kInk500, size: 20),
-          ),
-          prefixIconConstraints:
-          const BoxConstraints(minWidth: 0, minHeight: 0),
-          suffixIcon: _searchQuery.isEmpty
-              ? Container(
-            margin: const EdgeInsets.only(right: 6),
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: kSurfaceMuted,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.tune_rounded,
-                color: kInk800, size: 17),
-          )
-              : GestureDetector(
-            onTap: () {
-              _searchController.clear();
-              setState(() => _searchQuery = '');
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 6),
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: kSurfaceMuted,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.close_rounded,
-                  color: kInk800, size: 17),
-            ),
-          ),
-          suffixIconConstraints:
-          const BoxConstraints(minWidth: 0, minHeight: 0),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSectionTitle() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -782,7 +504,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'PARCOURS',
+                'CETTE SEMAINE',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   color: kInk500,
@@ -792,7 +514,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
                 ),
               ),
               SizedBox(height: 5),
-              Text('Chapitres essentiels', style: AppText.h2),
+              Text('Défis hebdo', style: AppText.h2),
             ],
           ),
         ),
@@ -803,7 +525,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
             borderRadius: BorderRadius.all(Radius.circular(9)),
           ),
           child: Text(
-            '${_filteredChapters.length}',
+            '$_weeklyCompleted/${_weeklyChallenges.length}',
             style: const TextStyle(
               fontFamily: 'Poppins',
               color: kInk700,
@@ -813,6 +535,109 @@ class _HomeUserPageState extends State<HomeUserPage> {
           ),
         ),
       ],
+    );
+  }
+
+  int get _weeklyCompleted =>
+      _weeklyChallenges.where((challenge) => challenge.isCompleted).length;
+
+  Widget _buildWeeklyChallengesSection(bool isWide) {
+    if (_weeklyChallenges.isEmpty) {
+      return _buildWeeklySummaryCard();
+    }
+
+    final cardWidth = isWide ? 320.0 : double.infinity;
+
+    return Column(
+      children: [
+        _buildWeeklySummaryCard(),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: _weeklyChallenges
+              .map(
+                (challenge) => SizedBox(
+                  width: cardWidth,
+                  child: _WeeklyChallengeHomeCard(challenge: challenge),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklySummaryCard() {
+    final total = _weeklyChallenges.length;
+    final progress = total == 0 ? 0.0 : _weeklyCompleted / total;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const WeeklyChallengesPage()),
+      ).then((_) => _loadUserData()),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: kBorder),
+          boxShadow: const [
+            BoxShadow(color: kShadow, blurRadius: 16, offset: Offset(0, 6)),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: kBlueLight,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.flag_rounded,
+                    color: kBlue,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Progression hebdomadaire',
+                        style: AppText.labelL,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$_weeklyCompleted / $total défis complétés',
+                        style: AppText.bodyS.copyWith(color: kInk500),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.north_east_rounded, color: kBlue, size: 18),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 9,
+                backgroundColor: kInk100,
+                valueColor: const AlwaysStoppedAnimation<Color>(kBlue),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -893,6 +718,77 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: AppText.bodyS.copyWith(color: kInk600, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeeklyChallengeHomeCard extends StatelessWidget {
+  final WeeklyChallenge challenge;
+
+  const _WeeklyChallengeHomeCard({required this.challenge});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = challenge.isCompleted ? kGreen : kBlue;
+    final light = challenge.isCompleted ? kGreenLight : kBlueLight;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: light,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  challenge.isCompleted
+                      ? Icons.check_rounded
+                      : Icons.flag_rounded,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(challenge.title, style: AppText.labelL),
+                    Text(
+                      challenge.description,
+                      style: AppText.bodyS.copyWith(color: kInk500),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '${challenge.progress}/${challenge.target}',
+                style: AppText.labelM.copyWith(color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: challenge.ratio,
+              minHeight: 8,
+              backgroundColor: kInk100,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
           ),
         ],
       ),
