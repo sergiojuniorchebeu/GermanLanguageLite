@@ -5,7 +5,7 @@ import 'package:projet2/User/Views/Settings.dart';
 import 'package:projet2/core/data/exam_catalog.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
-import 'package:projet2/features/conversation/conversation_drills_page.dart';
+import 'package:projet2/features/clinical_cases/clinical_cases_page.dart';
 import 'package:projet2/features/exams/exam_page.dart';
 
 class NavigationHomePage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _NavigationHomePageState extends State<NavigationHomePage> {
   late final List<Widget> _pages = const [
     HomeUserPage(),
     ChaptersPage(),
-    ConversationDrillsPage(),
+    ClinicalCasesPage(),
     SettingsPage(),
   ];
 
@@ -131,7 +131,7 @@ class _StudentBottomBar extends StatelessWidget {
                   const SizedBox(width: 84),
                   Expanded(
                     child: _BottomNavItem(
-                      label: 'Conversation',
+                      label: 'Cas cliniques',
                       iconPath: 'assets/img/messages.png',
                       isSelected: currentIndex == 2,
                       onTap: () => onDestinationSelected(2),

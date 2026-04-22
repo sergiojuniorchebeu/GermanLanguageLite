@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:projet2/core/data/exam_catalog.dart';
 import 'package:projet2/core/services/challenge_service.dart';
 import 'package:projet2/core/services/progress_service.dart';
@@ -27,7 +26,6 @@ class _SettingsPageState extends State<SettingsPage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String _userName = 'Guest';
-  String _userEmail = '';
   String _userInitial = 'G';
   int _streak = 0;
   int _xp = 0;
@@ -44,6 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
   int _weeklyCompleted = 0;
   int _weeklyTotal = 3;
   int _finalExamBestScore = 0;
+  List<WeeklyChallenge> _weeklyChallenges = const [];
 
   @override
   void initState() {
@@ -55,11 +54,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     final profile = await ProgressService.getProfileStats();
     final weekly = await ChallengeService.getWeeklySummary();
+    final weeklyChallenges = await ChallengeService.getWeeklyChallenges();
     final finalExamBestScore = await ProgressService.getFinalExamBestScore();
     if (!mounted) return;
     setState(() {
       _userName = prefs.getString('name') ?? 'Guest';
-      _userEmail = prefs.getString('email') ?? '';
       _userInitial = _userName.isNotEmpty ? _userName[0].toUpperCase() : 'G';
       _xp = profile.xp;
       _streak = profile.streak;
@@ -76,559 +75,108 @@ class _SettingsPageState extends State<SettingsPage> {
       _weeklyCompleted = weekly['completed'] as int? ?? 0;
       _weeklyTotal = weekly['total'] as int? ?? 3;
       _finalExamBestScore = finalExamBestScore;
+      _weeklyChallenges = weeklyChallenges;
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: kScaffold,
-      drawer: const CustomDrawer(),
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _buildHeader()),
-            SliverToBoxAdapter(child: _buildSections()),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
-    );
-  }
+  // ── Modals ────────────────────────────────────────────────────────────────
 
-  // ── Header utilisateur ────────────────────────────────────────────────────
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [kBlue, kPurple],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Barre top : menu + titre
-          Row(
-            children: [
-              Builder(
-                builder: (ctx) => GestureDetector(
-                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.menu_rounded,
-                        color: Colors.white, size: 22),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Paramètres',
-                style: AppText.h3.copyWith(color: Colors.white, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Avatar + infos
-          Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: Colors.white.withOpacity(0.5), width: 2),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _userInitial,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _userName,
-                      style: AppText.h3
-                          .copyWith(color: Colors.white, fontSize: 18),
-                    ),
-                    if (_userEmail.isNotEmpty)
-                      Text(
-                        _userEmail,
-                        style: AppText.bodyS.copyWith(
-                          color: Colors.white.withOpacity(0.75),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Stats strip
-          Row(
-            children: [
-              _StatChip(
-                icon: CupertinoIcons.flame_fill,
-                value: '$_streak j',
-                label: 'Streak',
-              ),
-              const SizedBox(width: 10),
-              _StatChip(
-                icon: CupertinoIcons.bolt_fill,
-                value: '$_xp XP',
-                label: 'Points',
-              ),
-              const SizedBox(width: 10),
-              _StatChip(
-                icon: CupertinoIcons.star_fill,
-                value: 'Niv. $_level',
-                label: 'Niveau',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Sections ──────────────────────────────────────────────────────────────
-  Widget _buildSections() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildAdvancedProfileCard(),
-          const SizedBox(height: 24),
-
-          // Compte
-          _SectionTitle(label: 'Compte'),
-          const SizedBox(height: 8),
-          _SettingsCard(
-            items: [
-              _SettingsItem(
-                icon: CupertinoIcons.person_fill,
-                label: 'Modifier le profil',
-                iconColor: kBlue,
-                iconBg: kBlueLight,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EditProfilePage()),
-                ).then((_) => _loadData()),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Apprentissage
-          _SectionTitle(label: 'Apprentissage'),
-          const SizedBox(height: 8),
-          _SettingsCard(
-            items: [
-              _SettingsItem(
-                icon: CupertinoIcons.chart_bar_fill,
-                label: 'Ma progression',
-                iconColor: kGreen,
-                iconBg: kGreenLight,
-                trailing: _buildProgressBadge(),
-                onTap: _showProgressDetail,
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.rosette,
-                label: 'Mes badges',
-                iconColor: kYellow,
-                iconBg: kYellowLight,
-                trailing: _buildBadgeCount(),
-                onTap: _showBadgesDetail,
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.flag_fill,
-                label: 'Défis hebdomadaires',
-                iconColor: kBlue,
-                iconBg: kBlueLight,
-                trailing: Text(
-                  '$_weeklyCompleted/$_weeklyTotal',
-                  style: AppText.labelS.copyWith(color: kBlue),
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const WeeklyChallengesPage()),
-                ).then((_) => _loadData()),
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.doc_text_search,
-                label: 'Examen final',
-                iconColor: kPurple,
-                iconBg: kPurpleLight,
-                trailing: Text(
-                  _finalExamBestScore > 0 ? '$_finalExamBestScore%' : 'Lancer',
-                  style: AppText.labelS.copyWith(color: kPurple),
-                ),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ExamPage.finalExam(
-                      title: 'Examen final',
-                      subtitle: 'Révision globale des chapitres 1 à 11',
-                      accentColor: kPurple,
-                      accentLight: kPurpleLight,
-                      phrases: buildFinalExamPool(),
-                    ),
-                  ),
-                ).then((_) => _loadData()),
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.arrow_counterclockwise,
-                label: 'Réinitialiser la progression',
-                iconColor: kCoral,
-                iconBg: kCoralLight,
-                onTap: _confirmReset,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          _SectionTitle(label: 'Révision guidée'),
-          const SizedBox(height: 8),
-          _SettingsCard(
-            items: [
-              _SettingsItem(
-                icon: CupertinoIcons.chat_bubble_2_fill,
-                label: 'Fiches de conversation',
-                iconColor: kBlue,
-                iconBg: kBlueLight,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ConversationDrillsPage(),
-                  ),
-                ),
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.person_2_square_stack_fill,
-                label: 'Expressions professionnelles',
-                iconColor: kPurple,
-                iconBg: kPurpleLight,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ProfessionalExpressionsPage(),
-                  ),
-                ),
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.heart_circle_fill,
-                label: 'Cas cliniques',
-                iconColor: kCoral,
-                iconBg: kCoralLight,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ClinicalCasesPage(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Application
-          _SectionTitle(label: 'Application'),
-          const SizedBox(height: 8),
-          _SettingsCard(
-            items: [
-              _SettingsItem(
-                icon: CupertinoIcons.person_2_fill,
-                label: 'Inviter un ami',
-                iconColor: kPurple,
-                iconBg: kPurpleLight,
-                onTap: _inviteFriend,
-              ),
-              _SettingsItem(
-                icon: CupertinoIcons.question_circle_fill,
-                label: 'Aide',
-                iconColor: kYellow,
-                iconBg: kYellowLight,
-                onTap: () => _showSnack('Page d\'aide à venir !'),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-
-          // Footer version
-          Center(
-            child: Column(
-              children: [
-                const Icon(
-                  CupertinoIcons.book_fill,
-                  size: 20,
-                  color: kInk500,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'German Language v2.0',
-                  style: AppText.bodyS.copyWith(color: kInk500),
-                ),
-                Text(
-                  'Conçu pour les soignants',
-                  style: AppText.caption.copyWith(color: kInk500),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAdvancedProfileCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('Profil avancé', style: AppText.h3),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: kBlueLight,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'Niveau $_level',
-                  style: AppText.labelS.copyWith(
-                    color: kBlue,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Plus que $_xpToNextLevel XP avant le prochain niveau.',
-            style: AppText.bodyS,
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: _levelProgress,
-              backgroundColor: kInk100,
-              valueColor: const AlwaysStoppedAnimation<Color>(kBlue),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _ProfileMetric(
-                icon: CupertinoIcons.time,
-                label: 'Temps total',
-                value: '$_totalMinutes min',
-              ),
-              _ProfileMetric(
-                icon: CupertinoIcons.check_mark_circled_solid,
-                label: 'Quiz validés',
-                value: '$_completedQuizzes',
-              ),
-              _ProfileMetric(
-                icon: CupertinoIcons.scope,
-                label: 'Meilleur score',
-                value: '$_bestQuizScore%',
-              ),
-              _ProfileMetric(
-                icon: CupertinoIcons.rectangle_stack_fill,
-                label: 'Flashcards',
-                value: '$_flashcardsReviewed',
-              ),
-              _ProfileMetric(
-                icon: CupertinoIcons.chart_bar_alt_fill,
-                label: 'Sessions',
-                value: '$_totalSessions',
-              ),
-              _ProfileMetric(
-                icon: CupertinoIcons.rosette,
-                label: 'Scores parfaits',
-                value: '$_perfectQuizzes',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text('Badges récents', style: AppText.labelM),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 58,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _badges.take(6).length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final badge = _badges.take(6).toList()[index];
-                return _BadgePill(badge: badge);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressBadge() {
-    return FutureBuilder<Map<int, double>>(
-      future: ProgressService.getAllChapterProgresses(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-        final progresses = snapshot.data!;
-        final completed = progresses.values.where((p) => p >= 1.0).length;
-        final total = progresses.length;
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: kGreenLight,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '$completed/$total',
-            style: AppText.caption.copyWith(
-              color: kGreen,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBadgeCount() {
-    final unlocked = _badges.where((badge) => badge.unlocked).length;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: kYellowLight,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '$unlocked/${_badges.length}',
-        style: AppText.caption.copyWith(
-          color: kYellow,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  void _showProgressDetail() {
+  void _showProgressModal() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => _ProgressSheet(),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _ProgressModal(),
     );
   }
 
-  void _showBadgesDetail() {
+  void _showBadgesModal() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => _BadgesSheet(badges: _badges),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _BadgesModal(badges: _badges),
     );
   }
 
-  void _confirmReset() {
-    showDialog(
+  void _showWeeklyChallengesModal() {
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Réinitialiser ?', style: AppText.h3),
-        content: Text(
-          'Toute votre progression, XP et streak seront effacés. Cette action est irréversible.',
-          style: AppText.bodyM,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child:
-                Text('Annuler', style: AppText.labelM.copyWith(color: kInk500)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await ProgressService.resetAll();
-              if (mounted) {
-                _loadData();
-                _showSnack('Progression réinitialisée.');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kCoral,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WeeklyChallengesModal(challenges: _weeklyChallenges),
+    );
+  }
+
+  void _showFinalExamModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _FinalExamModal(
+        bestScore: _finalExamBestScore,
+        onLaunch: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ExamPage.finalExam(
+                title: 'Examen final',
+                subtitle: 'Révision globale des chapitres 1 à 11',
+                accentColor: kPurple,
+                accentLight: kPurpleLight,
+                phrases: buildFinalExamPool(),
+              ),
             ),
-            child: const Text('Réinitialiser'),
-          ),
-        ],
+          ).then((_) => _loadData());
+        },
       ),
     );
   }
+
+  void _showResetModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ResetModal(
+        onConfirm: () async {
+          Navigator.pop(context);
+          await ProgressService.resetAll();
+          if (mounted) {
+            _loadData();
+            _showSnack('Progression réinitialisée.');
+          }
+        },
+      ),
+    );
+  }
+
+  void _showGuideModal(String title, Widget page) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _NavigationModal(
+        title: title,
+        onGo: () {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => page),
+          );
+        },
+      ),
+    );
+  }
+
+  void _confirmReset() => _showResetModal();
 
   void _inviteFriend() {
     final box = context.findRenderObject() as RenderBox?;
     Share.share(
       '🇩🇪 Apprends l\'allemand médical avec German Language ! L\'app idéale pour les soignants. #GermanLanguage',
       sharePositionOrigin:
-          box == null ? null : box.localToGlobal(Offset.zero) & box.size,
+      box == null ? null : box.localToGlobal(Offset.zero) & box.size,
     );
   }
 
@@ -642,181 +190,614 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-}
-
-// ── Progress Bottom Sheet ──────────────────────────────────────────────────────
-class _ProgressSheet extends StatelessWidget {
-  static const _chapterNames = {
-    1: 'Admission',
-    2: 'Paramètres',
-    3: 'Alimentation',
-    4: 'Hygiène',
-    5: 'Physiopathologie',
-    6: 'Examens',
-    7: 'Labo',
-    8: 'Anesthésie',
-    9: 'Soins',
-    10: 'Urgence',
-    11: 'Sortie',
-  };
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: kScaffold,
+      drawer: const CustomDrawer(),
+      body: SafeArea(
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildTopBar()),
+            SliverToBoxAdapter(child: _buildProfileCard()),
+            SliverToBoxAdapter(child: _buildWeeklyCard()),
+            SliverToBoxAdapter(child: _buildSectionLabel('Compte')),
+            SliverToBoxAdapter(child: _buildAccountSection()),
+            SliverToBoxAdapter(child: _buildSectionLabel('Apprentissage')),
+            SliverToBoxAdapter(child: _buildLearningSection()),
+            SliverToBoxAdapter(child: _buildSectionLabel('Révision guidée')),
+            SliverToBoxAdapter(child: _buildGuideSection()),
+            SliverToBoxAdapter(child: _buildSectionLabel('Application')),
+            SliverToBoxAdapter(child: _buildAppSection()),
+            SliverToBoxAdapter(child: _buildFooter()),
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Top bar ───────────────────────────────────────────────────────────────
+
+  Widget _buildTopBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
         children: [
-          Center(
-            child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: kBorder, borderRadius: BorderRadius.circular(2))),
+          _IconButton(
+            icon: Icons.grid_view_rounded,
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
           ),
-          const SizedBox(height: 20),
-          Text('Progression par chapitre', style: AppText.h3),
-          const SizedBox(height: 16),
-          FutureBuilder<Map<int, double>>(
-            future: ProgressService.getAllChapterProgresses(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final progresses = snapshot.data!;
-              return Column(
-                children: progresses.entries.map((e) {
-                  final name = _chapterNames[e.key] ?? 'Ch.${e.key}';
-                  final pct = (e.value * 100).round();
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 90,
-                          child: Text(
-                            'Ch.${e.key} $name',
-                            style: AppText.bodyS,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: e.value,
-                              backgroundColor: kInk100,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                e.value >= 1.0 ? kGreen : kBlue,
-                              ),
-                              minHeight: 7,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 36,
-                          child: Text(
-                            '$pct%',
-                            style: AppText.labelS.copyWith(
-                              color: e.value >= 1.0 ? kGreen : kBlue,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
+          const SizedBox(width: 12),
+          Text('Profil', style: AppText.h2.copyWith(fontSize: 18)),
         ],
       ),
     );
   }
-}
 
-class _BadgesSheet extends StatelessWidget {
-  final List<UserBadge> badges;
+  // ── Profile card ──────────────────────────────────────────────────────────
 
-  const _BadgesSheet({required this.badges});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildProfileCard() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: kBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: kFlagBlack,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-          ),
-          const SizedBox(height: 20),
-          Text('Mes badges', style: AppText.h3),
-          const SizedBox(height: 16),
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: badges.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final badge = badges[index];
-                return Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: badge.unlocked ? Colors.white : kInk100,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: kBorder),
-                  ),
-                  child: Row(
+          ],
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Avatar + name
+                  Row(
                     children: [
-                      Icon(
-                        _badgeIcon(badge.id),
-                        size: 20,
-                        color: badge.unlocked ? kInk800 : kInk500,
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: const BoxDecoration(
+                          color: kFlagGold,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _userInitial,
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: kFlagBlack,
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              badge.title,
-                              style: AppText.labelM.copyWith(
-                                color: badge.unlocked ? kInk900 : kInk500,
+                              _userName,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              badge.description,
-                              style: AppText.bodyS,
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 9, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: kFlagGold.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                    color: kFlagGold.withValues(alpha: 0.3)),
+                              ),
+                              child: Text(
+                                'Niveau $_level',
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: kFlagGold,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        badge.unlocked ? 'Débloqué' : 'Verrouillé',
-                        style: AppText.caption.copyWith(
-                          color: badge.unlocked ? kGreen : kInk500,
-                          fontWeight: FontWeight.w700,
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const EditProfilePage()),
+                        ).then((_) => _loadData()),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.12)),
+                          ),
+                          child: const Icon(Icons.edit_outlined,
+                              color: Colors.white, size: 16),
                         ),
                       ),
                     ],
                   ),
-                );
-              },
+
+                  const SizedBox(height: 20),
+
+                  // Stats row
+                  Row(
+                    children: [
+                      _DarkStat(
+                        icon: Icons.local_fire_department_rounded,
+                        iconColor: const Color(0xFFFF6B35),
+                        value: '$_streak j',
+                        label: 'Série',
+                      ),
+                      _DarkStat(
+                        icon: Icons.bolt_rounded,
+                        iconColor: kFlagGold,
+                        value: '$_xp XP',
+                        label: 'Points',
+                      ),
+                      _DarkStat(
+                        icon: Icons.schedule_rounded,
+                        iconColor: const Color(0xFF7DD3C0),
+                        value: '$_totalMinutes min',
+                        label: 'Temps',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // XP bar
+                  Row(
+                    children: [
+                      Text(
+                        '$_xp XP',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Niv. ${_level + 1} — encore $_xpToNextLevel XP',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 7),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: _levelProgress,
+                      minHeight: 7,
+                      backgroundColor: Colors.white.withValues(alpha: 0.10),
+                      valueColor:
+                      const AlwaysStoppedAnimation<Color>(kFlagGold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Metrics row
+            Container(
+              decoration: BoxDecoration(
+                border: Border(
+                    top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                children: [
+                  _DarkMetric(value: '$_completedQuizzes', label: 'Quiz'),
+                  _divider(),
+                  _DarkMetric(value: '$_bestQuizScore%', label: 'Meilleur'),
+                  _divider(),
+                  _DarkMetric(
+                      value: '$_flashcardsReviewed', label: 'Flashcards'),
+                  _divider(),
+                  _DarkMetric(value: '$_perfectQuizzes', label: 'Parfaits'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _divider() => Container(
+    width: 0.5,
+    height: 28,
+    color: Colors.white.withValues(alpha: 0.10),
+  );
+
+  // ── Weekly card ───────────────────────────────────────────────────────────
+
+  Widget _buildWeeklyCard() {
+    final progress =
+    _weeklyTotal == 0 ? 0.0 : _weeklyCompleted / _weeklyTotal;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: GestureDetector(
+        onTap: _showWeeklyChallengesModal,
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: kSurface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: kBorder),
+            boxShadow: const [
+              BoxShadow(color: kShadow, blurRadius: 12, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Ring
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: CustomPaint(
+                  painter: _RingPainter(
+                    progress: progress,
+                    ringColor: kFlagGold,
+                    trackColor: kInk100,
+                    strokeWidth: 5,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$_weeklyCompleted',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: kInk900,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Défis hebdomadaires', style: AppText.labelL),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$_weeklyCompleted / $_weeklyTotal complétés cette semaine',
+                      style: AppText.bodyS.copyWith(color: kInk500),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.north_east_rounded,
+                  color: kFlagGold, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Section label ─────────────────────────────────────────────────────────
+
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: kInk500,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  // ── Sections ──────────────────────────────────────────────────────────────
+
+  Widget _buildAccountSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: _SettingsGroup(items: [
+        _SettingsRow(
+          icon: Icons.person_outline_rounded,
+          iconColor: kFlagBlack,
+          iconBg: kInk100,
+          label: 'Modifier le profil',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EditProfilePage()),
+          ).then((_) => _loadData()),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildLearningSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: _SettingsGroup(items: [
+        _SettingsRow(
+          icon: Icons.bar_chart_rounded,
+          iconColor: const Color(0xFF3B6D11),
+          iconBg: const Color(0xFFEAF3DE),
+          label: 'Ma progression',
+          trailing: _buildBadgePill('$_completedQuizzes quiz', const Color(0xFF3B6D11), const Color(0xFFEAF3DE)),
+          onTap: _showProgressModal,
+        ),
+        _SettingsRow(
+          icon: Icons.workspace_premium_rounded,
+          iconColor: const Color(0xFFBA7517),
+          iconBg: const Color(0xFFFAEEDA),
+          label: 'Mes badges',
+          trailing: _buildBadgePill(
+            '${_badges.where((b) => b.unlocked).length}/${_badges.length}',
+            const Color(0xFFBA7517),
+            const Color(0xFFFAEEDA),
+          ),
+          onTap: _showBadgesModal,
+        ),
+        _SettingsRow(
+          icon: Icons.flag_rounded,
+          iconColor: kFlagBlack,
+          iconBg: kInk100,
+          label: 'Défis hebdomadaires',
+          trailing: _buildBadgePill('$_weeklyCompleted/$_weeklyTotal', kFlagBlack, kInk100),
+          onTap: _showWeeklyChallengesModal,
+        ),
+        _SettingsRow(
+          icon: Icons.description_outlined,
+          iconColor: const Color(0xFF534AB7),
+          iconBg: const Color(0xFFEEEDFE),
+          label: 'Examen final',
+          trailing: _buildBadgePill(
+            _finalExamBestScore > 0 ? '$_finalExamBestScore%' : 'À faire',
+            const Color(0xFF534AB7),
+            const Color(0xFFEEEDFE),
+          ),
+          onTap: _showFinalExamModal,
+        ),
+        _SettingsRow(
+          icon: Icons.restart_alt_rounded,
+          iconColor: const Color(0xFF993C1D),
+          iconBg: const Color(0xFFFAECE7),
+          label: 'Réinitialiser la progression',
+          isDestructive: true,
+          onTap: _confirmReset,
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildGuideSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: _SettingsGroup(items: [
+        _SettingsRow(
+          icon: Icons.chat_bubble_outline_rounded,
+          iconColor: const Color(0xFF185FA5),
+          iconBg: const Color(0xFFE6F1FB),
+          label: 'Fiches de conversation',
+          onTap: () => _showGuideModal(
+              'Fiches de conversation', const ConversationDrillsPage()),
+        ),
+        _SettingsRow(
+          icon: Icons.medical_information_outlined,
+          iconColor: const Color(0xFF534AB7),
+          iconBg: const Color(0xFFEEEDFE),
+          label: 'Expressions professionnelles',
+          onTap: () => _showGuideModal(
+              'Expressions professionnelles', const ProfessionalExpressionsPage()),
+        ),
+        _SettingsRow(
+          icon: Icons.favorite_border_rounded,
+          iconColor: const Color(0xFF993C1D),
+          iconBg: const Color(0xFFFAECE7),
+          label: 'Cas cliniques',
+          onTap: () =>
+              _showGuideModal('Cas cliniques', const ClinicalCasesPage()),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildAppSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: _SettingsGroup(items: [
+        _SettingsRow(
+          icon: Icons.group_outlined,
+          iconColor: const Color(0xFF534AB7),
+          iconBg: const Color(0xFFEEEDFE),
+          label: 'Inviter un ami',
+          onTap: _inviteFriend,
+        ),
+        _SettingsRow(
+          icon: Icons.help_outline_rounded,
+          iconColor: const Color(0xFFBA7517),
+          iconBg: const Color(0xFFFAEEDA),
+          label: 'Aide',
+          onTap: () => _showSnack('Page d\'aide à venir !'),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildBadgePill(String text, Color fg, Color bg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: fg,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 32),
+      child: Center(
+        child: Column(
+          children: [
+            const Icon(CupertinoIcons.book_fill, size: 18, color: kInk500),
+            const SizedBox(height: 6),
+            Text('German Language v2.0',
+                style: AppText.bodyS.copyWith(color: kInk500)),
+            Text('Conçu pour les soignants',
+                style: AppText.caption.copyWith(color: kInk500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared sub-widgets ────────────────────────────────────────────────────────
+
+class _IconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _IconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kBorder),
+        ),
+        child: Icon(icon, size: 20, color: kInk900),
+      ),
+    );
+  }
+}
+
+class _DarkStat extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String value;
+  final String label;
+
+  const _DarkStat({
+    required this.icon,
+    required this.iconColor,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: iconColor, size: 16),
+            const SizedBox(height: 5),
+            Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 10,
+                color: Colors.white.withValues(alpha: 0.45),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DarkMetric extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _DarkMetric({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.40),
             ),
           ),
         ],
@@ -825,34 +806,15 @@ class _BadgesSheet extends StatelessWidget {
   }
 }
 
-// ── UI Components ─────────────────────────────────────────────────────────────
-
-class _SectionTitle extends StatelessWidget {
-  final String label;
-  const _SectionTitle({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: AppText.caption.copyWith(
-        color: kInk500,
-        letterSpacing: 0.8,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-  }
-}
-
-class _SettingsCard extends StatelessWidget {
-  final List<_SettingsItem> items;
-  const _SettingsCard({required this.items});
+class _SettingsGroup extends StatelessWidget {
+  final List<_SettingsRow> items;
+  const _SettingsGroup({required this.items});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: kSurface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: kBorder),
       ),
@@ -871,165 +833,577 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
-class _SettingsItem extends StatelessWidget {
+class _SettingsRow extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color iconColor;
   final Color iconBg;
+  final String label;
   final Widget? trailing;
   final VoidCallback onTap;
+  final bool isDestructive;
 
-  const _SettingsItem({
+  const _SettingsRow({
     required this.icon,
-    required this.label,
     required this.iconColor,
     required this.iconBg,
+    required this.label,
     required this.onTap,
     this.trailing,
+    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
       leading: Container(
-        width: 38,
-        height: 38,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: iconBg,
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, size: 18, color: iconColor),
+        child: Icon(icon, size: 17, color: iconColor),
       ),
-      title: Text(label, style: AppText.labelM.copyWith(color: kInk800)),
+      title: Text(
+        label,
+        style: AppText.labelM.copyWith(
+          color: isDestructive ? const Color(0xFF993C1D) : kInk800,
+        ),
+      ),
       trailing: trailing ??
-          Icon(
-            CupertinoIcons.chevron_forward,
-            size: 15,
-            color: kInk500,
-          ),
+          const Icon(Icons.chevron_right_rounded, size: 18, color: kInk500),
       onTap: onTap,
     );
   }
 }
 
-class _ProfileMetric extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
+// ── Modals ────────────────────────────────────────────────────────────────────
 
-  const _ProfileMetric({
-    required this.icon,
-    required this.label,
-    required this.value,
+class _ModalShell extends StatelessWidget {
+  final String title;
+  final Widget child;
+  final bool scrollable;
+
+  const _ModalShell({
+    required this.title,
+    required this.child,
+    this.scrollable = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 146,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kScaffold,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: kInk700),
-          const SizedBox(height: 8),
-          Text(value, style: AppText.h3.copyWith(fontSize: 16)),
-          const SizedBox(height: 2),
-          Text(label, style: AppText.bodyS),
-        ],
-      ),
-    );
-  }
-}
-
-class _BadgePill extends StatelessWidget {
-  final UserBadge badge;
-
-  const _BadgePill({required this.badge});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 92,
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: badge.unlocked ? Colors.white : kInk100,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _badgeIcon(badge.id),
-            size: 15,
-            color: badge.unlocked ? kInk800 : kInk500,
-          ),
-          Text(
-            badge.title,
-            style: AppText.caption.copyWith(
-              color: badge.unlocked ? kInk800 : kInk500,
-              fontSize: 7.5,
-              height: 1.0,
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Center(
+          child: Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: kBorder,
+              borderRadius: BorderRadius.circular(2),
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-        ],
+        ),
+        const SizedBox(height: 20),
+        Text(title, style: AppText.h2.copyWith(fontSize: 18)),
+        const SizedBox(height: 20),
+        child,
+        const SizedBox(height: 24),
+      ],
+    );
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: scrollable
+          ? SingleChildScrollView(child: content)
+          : content,
+    );
+  }
+}
+
+// Progress modal
+class _ProgressModal extends StatelessWidget {
+  static const _chapterNames = {
+    1: 'Admission', 2: 'Paramètres', 3: 'Alimentation',
+    4: 'Hygiène', 5: 'Physiopathologie', 6: 'Examens',
+    7: 'Labo', 8: 'Anesthésie', 9: 'Soins',
+    10: 'Urgence', 11: 'Sortie',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.92,
+      minChildSize: 0.4,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(color: kBorder, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Progression par chapitre', style: AppText.h2.copyWith(fontSize: 18)),
+            const SizedBox(height: 20),
+            Expanded(
+              child: FutureBuilder<Map<int, double>>(
+                future: ProgressService.getAllChapterProgresses(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final progresses = snapshot.data!;
+                  return ListView(
+                    controller: controller,
+                    children: progresses.entries.map((e) {
+                      final name = _chapterNames[e.key] ?? 'Ch.${e.key}';
+                      final pct = (e.value * 100).round();
+                      final isDone = e.value >= 1.0;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Ch.${e.key} · $name',
+                                  style: AppText.labelM.copyWith(fontSize: 13),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '$pct%',
+                                  style: AppText.labelM.copyWith(
+                                    fontSize: 13,
+                                    color: isDone ? kGreenSuccess : kFlagBlack,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(99),
+                              child: LinearProgressIndicator(
+                                value: e.value,
+                                minHeight: 7,
+                                backgroundColor: kInk100,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDone ? kGreenSuccess : kFlagGold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-
-  const _StatChip({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
+// Badges modal
+class _BadgesModal extends StatelessWidget {
+  final List<UserBadge> badges;
+  const _BadgesModal({required this.badges});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.92,
+      minChildSize: 0.4,
+      builder: (_, controller) => Container(
+        decoration: const BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(color: kBorder, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Mes badges', style: AppText.h2.copyWith(fontSize: 18)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.separated(
+                controller: controller,
+                itemCount: badges.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final badge = badges[index];
+                  return Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: badge.unlocked ? kSurface : kInk100,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: badge.unlocked
+                            ? kGreenSuccess.withValues(alpha: 0.3)
+                            : kBorder,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: badge.unlocked ? kGreenSuccessLight : kInk100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            _badgeIcon(badge.id),
+                            size: 18,
+                            color: badge.unlocked ? kGreenSuccess : kInk500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(badge.title,
+                                  style: AppText.labelM.copyWith(
+                                      color: badge.unlocked ? kInk900 : kInk500)),
+                              const SizedBox(height: 2),
+                              Text(badge.description, style: AppText.bodyS),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: badge.unlocked
+                                ? kGreenSuccessLight
+                                : kInk100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            badge.unlocked ? 'Débloqué' : 'Verrouillé',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: badge.unlocked ? kGreenSuccess : kInk500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 6),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+    );
+  }
+}
+
+// Weekly challenges modal
+class _WeeklyChallengesModal extends StatelessWidget {
+  final List<WeeklyChallenge> challenges;
+  const _WeeklyChallengesModal({required this.challenges});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModalShell(
+      title: 'Défis hebdomadaires',
+      scrollable: true,
+      child: Column(
+        children: challenges.map((c) {
+          final isDone = c.isCompleted;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDone
+                      ? kGreenSuccess.withValues(alpha: 0.3)
+                      : kBorder,
                 ),
               ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 10,
-                  color: Colors.white.withOpacity(0.7),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: CustomPaint(
+                      painter: _RingPainter(
+                        progress: c.ratio,
+                        ringColor: isDone ? kGreenSuccess : kFlagGold,
+                        trackColor: kInk100,
+                        strokeWidth: 5,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${(c.ratio * 100).round()}%',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: isDone ? kGreenSuccess : kInk900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(c.title, style: AppText.labelL),
+                        const SizedBox(height: 2),
+                        Text(c.description,
+                            style: AppText.bodyS.copyWith(color: kInk500)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${c.progress}/${c.target}',
+                        style: AppText.labelM.copyWith(
+                          color: isDone ? kGreenSuccess : kFlagGold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isDone ? kGreenSuccessLight : kPeachLight,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isDone ? 'Terminé' : 'En cours',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: isDone
+                                ? kGreenSuccess
+                                : const Color(0xFF7A4A00),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// Final exam modal
+class _FinalExamModal extends StatelessWidget {
+  final int bestScore;
+  final VoidCallback onLaunch;
+
+  const _FinalExamModal({required this.bestScore, required this.onLaunch});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModalShell(
+      title: 'Examen final',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEEDFE),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.description_outlined,
+                    color: Color(0xFF534AB7), size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Révision globale',
+                          style: AppText.labelL
+                              .copyWith(color: const Color(0xFF534AB7))),
+                      Text('Chapitres 1 à 11',
+                          style: AppText.bodyS.copyWith(color: kInk500)),
+                    ],
+                  ),
+                ),
+                if (bestScore > 0)
+                  Text(
+                    '$bestScore%',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF534AB7),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (bestScore > 0) ...[
+            const SizedBox(height: 10),
+            Text('Meilleur score : $bestScore%',
+                style: AppText.bodyS.copyWith(color: kInk500)),
+          ],
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: onLaunch,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: kFlagBlack,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.play_arrow_rounded,
+                      color: kFlagGold, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Lancer l\'examen',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Reset modal
+class _ResetModal extends StatelessWidget {
+  final VoidCallback onConfirm;
+  const _ResetModal({required this.onConfirm});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModalShell(
+      title: 'Réinitialiser ?',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAECE7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    color: Color(0xFF993C1D), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Toute votre progression, XP et streak seront effacés. Cette action est irréversible.',
+                    style: AppText.bodyS.copyWith(color: kInk700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: kInk100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Annuler',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        color: kInk700,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onConfirm,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF993C1D),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Réinitialiser',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1040,25 +1414,127 @@ class _StatChip extends StatelessWidget {
   }
 }
 
+// Navigation modal (for guide section)
+class _NavigationModal extends StatelessWidget {
+  final String title;
+  final VoidCallback onGo;
+  const _NavigationModal({required this.title, required this.onGo});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ModalShell(
+      title: title,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Accédez à votre section de révision.',
+            style: AppText.bodyM.copyWith(color: kInk500),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: onGo,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: kFlagBlack,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Ouvrir',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward_rounded,
+                      color: kFlagGold, size: 18),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Ring painter ──────────────────────────────────────────────────────────────
+
+class _RingPainter extends CustomPainter {
+  const _RingPainter({
+    required this.progress,
+    required this.ringColor,
+    required this.trackColor,
+    required this.strokeWidth,
+  });
+
+  final double progress;
+  final Color ringColor;
+  final Color trackColor;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    const startAngle = -1.5708;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      0, 6.2832, false,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round,
+    );
+
+    if (progress > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle, 6.2832 * progress, false,
+        Paint()
+          ..color = ringColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress || old.ringColor != ringColor;
+}
+
+// ── Badge icon helper ─────────────────────────────────────────────────────────
+
 IconData _badgeIcon(String id) {
   switch (id) {
     case 'first_lesson':
-      return CupertinoIcons.book;
+      return Icons.menu_book_rounded;
     case 'first_quiz':
-      return CupertinoIcons.check_mark_circled;
+      return Icons.check_circle_outline_rounded;
     case 'perfect_score':
-      return CupertinoIcons.scope;
+      return Icons.gps_fixed_rounded;
     case 'chapter_master':
-      return CupertinoIcons.flag_fill;
+      return Icons.flag_rounded;
     case 'streak_7':
-      return CupertinoIcons.flame_fill;
+      return Icons.local_fire_department_rounded;
     case 'focused_reviewer':
-      return CupertinoIcons.rectangle_stack_fill;
+      return Icons.layers_rounded;
     case 'xp_500':
-      return CupertinoIcons.bolt_fill;
+      return Icons.bolt_rounded;
     case 'time_60':
-      return CupertinoIcons.time;
+      return Icons.schedule_rounded;
     default:
-      return CupertinoIcons.rosette;
+      return Icons.workspace_premium_rounded;
   }
 }

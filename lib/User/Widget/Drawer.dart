@@ -5,8 +5,8 @@ import 'package:projet2/core/theme/text_styles.dart';
 import 'package:projet2/core/services/progress_service.dart';
 import 'package:projet2/User/Views/Settings.dart';
 import 'package:projet2/features/challenges/weekly_challenges_page.dart';
+import 'package:projet2/features/conversation/conversation_drills_page.dart';
 import 'package:projet2/features/expressions/professional_expressions_page.dart';
-import 'package:projet2/features/clinical_cases/clinical_cases_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -90,12 +90,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 ),
                 _DrawerItem(
                   icon: CupertinoIcons.heart_circle_fill,
-                  title: 'Cas cliniques',
+                  title: 'Fiches de conversation',
                   color: kCoral,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const ClinicalCasesPage(),
+                      builder: (_) => const ConversationDrillsPage(),
                     ),
                   ),
                 ),
@@ -284,7 +284,7 @@ class _DrawerItem extends StatelessWidget {
         title,
         style: AppText.labelL.copyWith(color: kInk800),
       ),
-      trailing: Icon(
+      trailing: const Icon(
         Icons.arrow_forward_ios_rounded,
         size: 14,
         color: kInk500,
