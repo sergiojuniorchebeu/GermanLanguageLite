@@ -115,7 +115,7 @@ class _StudentBottomBar extends StatelessWidget {
                   Expanded(
                     child: _BottomNavItem(
                       label: 'Home',
-                      icon: Icons.home_rounded,
+                      iconPath: 'assets/img/home_selected.png',
                       isSelected: currentIndex == 0,
                       onTap: () => onDestinationSelected(0),
                     ),
@@ -123,7 +123,7 @@ class _StudentBottomBar extends StatelessWidget {
                   Expanded(
                     child: _BottomNavItem(
                       label: 'Chapitres',
-                      icon: Icons.menu_book_rounded,
+                      iconPath: 'assets/img/pile-de-livres-de-trois.png',
                       isSelected: currentIndex == 1,
                       onTap: () => onDestinationSelected(1),
                     ),
@@ -132,7 +132,7 @@ class _StudentBottomBar extends StatelessWidget {
                   Expanded(
                     child: _BottomNavItem(
                       label: 'Conversation',
-                      icon: Icons.forum_rounded,
+                      iconPath: 'assets/img/messages.png',
                       isSelected: currentIndex == 2,
                       onTap: () => onDestinationSelected(2),
                     ),
@@ -140,7 +140,7 @@ class _StudentBottomBar extends StatelessWidget {
                   Expanded(
                     child: _BottomNavItem(
                       label: 'Profil',
-                      icon: Icons.person_rounded,
+                      iconPath: 'assets/img/profil_selected.png',
                       isSelected: currentIndex == 3,
                       onTap: () => onDestinationSelected(3),
                     ),
@@ -202,13 +202,13 @@ class _StudentBottomBar extends StatelessWidget {
 
 class _BottomNavItem extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String iconPath;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _BottomNavItem({
     required this.label,
-    required this.icon,
+    required this.iconPath,
     required this.isSelected,
     required this.onTap,
   });
@@ -224,7 +224,13 @@ class _BottomNavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 21),
+            Image.asset(
+              iconPath,
+              width: 21,
+              height: 21,
+              color: color,
+              colorBlendMode: BlendMode.srcIn,
+            ),
             const SizedBox(height: 4),
             Text(
               label,
