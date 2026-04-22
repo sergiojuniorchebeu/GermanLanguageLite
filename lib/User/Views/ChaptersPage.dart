@@ -13,13 +13,34 @@ class ChaptersPage extends StatefulWidget {
 }
 
 class _ChaptersPageState extends State<ChaptersPage> {
+  final _searchController = TextEditingController();
+
   late final List<ChapterData> _chapters = buildStudentChapters();
   Map<int, double> _chapterProgresses = const {};
+  String _searchQuery = '';
+
+  List<ChapterData> get _filteredChapters {
+    if (_searchQuery.isEmpty) return _chapters;
+    final query = _searchQuery.toLowerCase();
+    return _chapters
+        .where(
+          (chapter) =>
+              chapter.titleFR.toLowerCase().contains(query) ||
+              chapter.titleDE.toLowerCase().contains(query),
+        )
+        .toList();
+  }
 
   @override
   void initState() {
     super.initState();
     _loadProgress();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProgress() async {
@@ -63,6 +84,8 @@ class _ChaptersPageState extends State<ChaptersPage> {
                           style: AppText.bodyM.copyWith(color: kInk500),
                         ),
                         const SizedBox(height: 24),
+                        _buildSearchBar(),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -77,7 +100,7 @@ class _ChaptersPageState extends State<ChaptersPage> {
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final chapter = _chapters[index];
+                        final chapter = _filteredChapters[index];
                         return ChapterCard(
                           chapter: chapter,
                           progress: _chapterProgresses[chapter.number] ?? 0,
@@ -91,7 +114,7 @@ class _ChaptersPageState extends State<ChaptersPage> {
                                   ).then((_) => _loadProgress()),
                         );
                       },
-                      childCount: _chapters.length,
+                      childCount: _filteredChapters.length,
                     ),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
@@ -104,6 +127,72 @@ class _ChaptersPageState extends State<ChaptersPage> {
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kBorder),
+        boxShadow: const [
+          BoxShadow(color: kShadow, blurRadius: 16, offset: Offset(0, 6)),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (value) => setState(() => _searchQuery = value),
+        style: AppText.bodyM.copyWith(color: kInk900),
+        decoration: InputDecoration(
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          hintText: 'Rechercher un chapitre...',
+          prefixIcon: const Padding(
+            padding: EdgeInsets.only(left: 14, right: 8),
+            child: Icon(Icons.search_rounded, color: kInk500, size: 20),
+          ),
+          prefixIconConstraints:
+              const BoxConstraints(minWidth: 0, minHeight: 0),
+          suffixIcon: _searchQuery.isEmpty
+              ? Container(
+                  margin: const EdgeInsets.only(right: 6),
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: kSurfaceMuted,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child:
+                      const Icon(Icons.tune_rounded, color: kInk800, size: 17),
+                )
+              : GestureDetector(
+                  onTap: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: kSurfaceMuted,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: kInk800,
+                      size: 17,
+                    ),
+                  ),
+                ),
+          suffixIconConstraints:
+              const BoxConstraints(minWidth: 0, minHeight: 0),
         ),
       ),
     );

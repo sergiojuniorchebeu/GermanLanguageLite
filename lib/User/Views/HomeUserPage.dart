@@ -6,6 +6,7 @@ import 'package:projet2/core/services/challenge_service.dart';
 import 'package:projet2/core/services/progress_service.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
+import 'package:projet2/features/challenges/challenge_navigation.dart';
 import 'package:projet2/features/challenges/weekly_challenges_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -309,12 +310,12 @@ class _HomeUserPageState extends State<HomeUserPage> {
             const double radius = 12;
 
             if (isActive) {
-              bg = kFlagGold;
-              fg = kFlagBlack;
+              bg = kCoral;
+              fg = Colors.white;
             } else if (isToday) {
               bg = Colors.transparent;
-              fg = kFlagGold;
-              border = Border.all(color: kFlagGold, width: 1.5);
+              fg = kFlagRed;
+              border = Border.all(color: kFlagRed, width: 1.5);
             } else {
               bg = kSurface;
               fg = kInk500;
@@ -546,16 +547,17 @@ class _HomeUserPageState extends State<HomeUserPage> {
       return _buildWeeklySummaryCard();
     }
 
+    final preview = _weeklyChallenges.take(3).toList();
     final cardWidth = isWide ? 320.0 : double.infinity;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildWeeklySummaryCard(),
         const SizedBox(height: 16),
         Wrap(
           spacing: 14,
           runSpacing: 14,
-          children: _weeklyChallenges
+          children: preview
               .map(
                 (challenge) => SizedBox(
                   width: cardWidth,
@@ -570,7 +572,8 @@ class _HomeUserPageState extends State<HomeUserPage> {
 
   Widget _buildWeeklySummaryCard() {
     final total = _weeklyChallenges.length;
-    final progress = total == 0 ? 0.0 : _weeklyCompleted / total;
+    final completed = _weeklyCompleted;
+    final progress = total == 0 ? 0.0 : completed / total;
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -580,28 +583,35 @@ class _HomeUserPageState extends State<HomeUserPage> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: kSurface,
+          color: kFlagBlack,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: kBorder),
-          boxShadow: const [
-            BoxShadow(color: kShadow, blurRadius: 16, offset: Offset(0, 6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── En-tête ──────────────────────────────────────────
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    color: kBlueLight,
-                    borderRadius: BorderRadius.circular(14),
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.12),
+                    ),
                   ),
                   child: const Icon(
                     Icons.flag_rounded,
-                    color: kBlue,
+                    color: kFlagGold,
                     size: 20,
                   ),
                 ),
@@ -612,27 +622,53 @@ class _HomeUserPageState extends State<HomeUserPage> {
                     children: [
                       const Text(
                         'Progression hebdomadaire',
-                        style: AppText.labelL,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$_weeklyCompleted / $total défis complétés',
-                        style: AppText.bodyS.copyWith(color: kInk500),
+                        '$completed / $total défis complétés',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white.withValues(alpha: 0.50),
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.north_east_rounded, color: kBlue, size: 18),
+                const Icon(
+                  Icons.north_east_rounded,
+                  color: kFlagGold,
+                  size: 18,
+                ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+
+            // ── Barre de progression ──────────────────────────────
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 9,
-                backgroundColor: kInk100,
-                valueColor: const AlwaysStoppedAnimation<Color>(kBlue),
+                minHeight: 8,
+                backgroundColor: Colors.white.withValues(alpha: 0.12),
+                valueColor: const AlwaysStoppedAnimation<Color>(kFlagGold),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // ── Pourcentage ───────────────────────────────────────
+            Text(
+              '${(progress * 100).round()}% accompli cette semaine',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 11,
               ),
             ),
           ],
@@ -670,61 +706,6 @@ class _Pill extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color accent;
-  final IconData icon;
-
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.accent,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: accent, size: 17),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: kInk900,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppText.bodyS.copyWith(color: kInk600, fontSize: 11),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _WeeklyChallengeHomeCard extends StatelessWidget {
   final WeeklyChallenge challenge;
 
@@ -732,66 +713,154 @@ class _WeeklyChallengeHomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = challenge.isCompleted ? kGreen : kBlue;
-    final light = challenge.isCompleted ? kGreenLight : kBlueLight;
+    final bool isDone = challenge.isCompleted;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: light,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  challenge.isCompleted
-                      ? Icons.check_rounded
-                      : Icons.flag_rounded,
-                  color: color,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(challenge.title, style: AppText.labelL),
-                    Text(
-                      challenge.description,
-                      style: AppText.bodyS.copyWith(color: kInk500),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '${challenge.progress}/${challenge.target}',
-                style: AppText.labelM.copyWith(color: color),
-              ),
-            ],
+    final Color ringColor = isDone ? kGreenSuccess : kFlagGold;
+    final Color badgeBg = isDone ? kGreenSuccessLight : kPeachLight;
+    final Color badgeFg = isDone ? kGreenSuccess : const Color(0xFF7A4A00);
+    final String statusLabel = isDone ? 'Terminé' : 'En cours';
+
+    return GestureDetector(
+      onTap: () => ChallengeNavigation.openChallenge(context, challenge),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDone ? kGreenSuccess.withValues(alpha: 0.35) : kBorder,
           ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: challenge.ratio,
-              minHeight: 8,
-              backgroundColor: kInk100,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+          boxShadow: const [
+            BoxShadow(color: kShadow, blurRadius: 12, offset: Offset(0, 4)),
+          ],
+        ),
+        child: Row(
+          children: [
+            // ── Anneau ───────────────────────────────────────────
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: CustomPaint(
+                painter: _RingPainter(
+                  progress: challenge.ratio,
+                  ringColor: ringColor,
+                  trackColor: kInk100,
+                  strokeWidth: 5,
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 14),
+
+            // ── Titre + description ───────────────────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    challenge.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.labelL,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    challenge.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.bodyS.copyWith(color: kInk500),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // ── Badges droite ─────────────────────────────────────
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Progression chiffrée
+                Text(
+                  '${challenge.progress}/${challenge.target}',
+                  style: AppText.labelM.copyWith(color: ringColor),
+                ),
+                const SizedBox(height: 6),
+                // Badge statut
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: badgeFg,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+// ── Painter anneau ────────────────────────────────────────────────────────────
+class _RingPainter extends CustomPainter {
+  const _RingPainter({
+    required this.progress,
+    required this.ringColor,
+    required this.trackColor,
+    required this.strokeWidth,
+  });
+
+  final double progress;
+  final Color ringColor;
+  final Color trackColor;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    const startAngle = -1.5708; // départ en haut
+
+    // Track
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      0,
+      6.2832,
+      false,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Fill
+    if (progress > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        6.2832 * progress,
+        false,
+        Paint()
+          ..color = ringColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress || old.ringColor != ringColor;
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:projet2/core/services/challenge_service.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
+import 'package:projet2/features/challenges/challenge_navigation.dart';
 
 class WeeklyChallengesPage extends StatefulWidget {
   const WeeklyChallengesPage({super.key});
@@ -48,7 +49,7 @@ class _WeeklyChallengesPageState extends State<WeeklyChallengesPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Cette semaine', style: AppText.h3),
+                    const Text('Cette semaine', style: AppText.h3),
                     const SizedBox(height: 6),
                     Text(
                       '$completed / ${challenges.length} défis complétés',
@@ -90,63 +91,66 @@ class _ChallengeCard extends StatelessWidget {
     final color = challenge.isCompleted ? kGreen : kBlue;
     final light = challenge.isCompleted ? kGreenLight : kBlueLight;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: light,
-                  borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: () => ChallengeNavigation.openChallenge(context, challenge),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: kBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: light,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    challenge.isCompleted
+                        ? Icons.check_rounded
+                        : Icons.flag_rounded,
+                    color: color,
+                  ),
                 ),
-                child: Icon(
-                  challenge.isCompleted
-                      ? Icons.check_rounded
-                      : Icons.flag_rounded,
-                  color: color,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(challenge.title, style: AppText.labelL),
+                      Text(
+                        challenge.description,
+                        style: AppText.bodyS.copyWith(color: kInk500),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(challenge.title, style: AppText.labelL),
-                    Text(
-                      challenge.description,
-                      style: AppText.bodyS.copyWith(color: kInk500),
-                    ),
-                  ],
+                Text(
+                  '${challenge.progress}/${challenge.target}',
+                  style: AppText.labelM.copyWith(color: color),
                 ),
-              ),
-              Text(
-                '${challenge.progress}/${challenge.target}',
-                style: AppText.labelM.copyWith(color: color),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: challenge.ratio,
-              minHeight: 8,
-              backgroundColor: kInk100,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: challenge.ratio,
+                minHeight: 8,
+                backgroundColor: kInk100,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

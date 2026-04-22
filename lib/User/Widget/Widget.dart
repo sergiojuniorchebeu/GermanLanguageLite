@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
 
@@ -346,6 +347,12 @@ class TaskCard extends StatefulWidget {
   final VoidCallback? onTitleTap;
   final VoidCallback? onArrowTap;
 
+  /// Optionnel : affiche une barre de progression (0.0 → 1.0)
+  final double? progress;
+
+  /// Optionnel : badge texte (ex: "Nouveau", "3 leçons")
+  final String? badge;
+
   const TaskCard({
     super.key,
     required this.title,
@@ -356,99 +363,243 @@ class TaskCard extends StatefulWidget {
     this.onCardTap,
     this.onTitleTap,
     this.onArrowTap,
+    this.progress,
+    this.badge,
   });
 
   @override
   State<TaskCard> createState() => _TaskCardState();
 }
 
-class _TaskCardState extends State<TaskCard> {
-  bool _pressed = false;
+class _TaskCardState extends State<TaskCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
 
   bool get _isDisabled => widget.onCardTap == null;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) {
+    if (_isDisabled) return;
+    HapticFeedback.selectionClick();
+    _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails _) => _controller.reverse();
+  void _onTapCancel() => _controller.reverse();
+
+  @override
   Widget build(BuildContext context) {
+    final iconColor =
+    _isDisabled ? kInk500 : (widget.iconColor ?? kBlue);
+    final iconBg =
+    _isDisabled ? kInk100 : (widget.iconBackground ?? kBlueLight);
+    final icon =
+    _isDisabled ? Icons.lock_outline_rounded : (widget.leadingIcon ?? Icons.menu_book_rounded);
+
     return GestureDetector(
       onTap: widget.onCardTap,
-      onTapDown: _isDisabled ? null : (_) => setState(() => _pressed = true),
-      onTapUp: _isDisabled ? null : (_) => setState(() => _pressed = false),
-      onTapCancel: _isDisabled ? null : () => setState(() => _pressed = false),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: _isDisabled ? 0.45 : 1.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          transform: Matrix4.translationValues(_pressed ? 2 : 0, 0, 0),
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: kBorder),
-            boxShadow: _pressed || _isDisabled
-                ? []
-                : [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: _isDisabled
-                      ? kInk100
-                      : (widget.iconBackground ?? kBlueLight),
-                  borderRadius: BorderRadius.circular(13),
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: ScaleTransition(
+        scale: _scaleAnim,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: _isDisabled ? 0.46 : 1.0,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            decoration: BoxDecoration(
+              color: kSurface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: kBorder),
+              boxShadow: _isDisabled
+                  ? []
+                  : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.055),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
                 ),
-                child: Icon(
-                  _isDisabled
-                      ? Icons.lock_outline_rounded
-                      : (widget.leadingIcon ?? Icons.menu_book_rounded),
-                  color: _isDisabled ? kInk500 : (widget.iconColor ?? kBlue),
-                  size: 20,
+                BoxShadow(
+                  color: iconColor.withValues(alpha: 0.06),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: AppText.labelM.copyWith(
-                        color: kInk900,
-                        fontSize: 13,
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Ligne principale ───────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Icône
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: iconBg,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(icon, color: iconColor, size: 21),
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      widget.subtitle,
-                      style: AppText.bodyS.copyWith(
-                        fontStyle: FontStyle.italic,
-                        fontSize: 10.5,
-                        color: kInk500,
+                      const SizedBox(width: 14),
+
+                      // Textes
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Titre + badge inline
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.title,
+                                    style: AppText.labelM.copyWith(
+                                      color: kInk900,
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (widget.badge != null) ...[
+                                  const SizedBox(width: 7),
+                                  _Badge(
+                                    label: widget.badge!,
+                                    color: iconColor,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+
+                            // Sous-titre
+                            Text(
+                              widget.subtitle,
+                              style: AppText.bodyS.copyWith(
+                                fontStyle: FontStyle.italic,
+                                fontSize: 11,
+                                color: kInk500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 10),
+
+                      // Flèche
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _isDisabled
+                              ? kInk100
+                              : iconColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          _isDisabled
+                              ? Icons.lock_outline_rounded
+                              : Icons.arrow_forward_rounded,
+                          size: 15,
+                          color: _isDisabled ? kInk500 : iconColor,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // ── Barre de progression (optionnelle) ─────────
+                  if (widget.progress != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: widget.progress,
+                              minHeight: 5,
+                              backgroundColor:
+                              iconColor.withValues(alpha: 0.10),
+                              valueColor:
+                              AlwaysStoppedAnimation<Color>(iconColor),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${((widget.progress ?? 0) * 100).round()}%',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: iconColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: _isDisabled ? kInk500 : (widget.iconColor ?? kBlue),
-              ),
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Badge chip ────────────────────────────────────────────────────────────────
+
+class _Badge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _Badge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Poppins',
+          color: color,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
         ),
       ),
     );

@@ -3,16 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
 import 'package:projet2/core/theme/text_styles.dart';
 import 'package:projet2/core/services/progress_service.dart';
-import 'package:projet2/core/data/exam_catalog.dart';
-import 'package:projet2/User/Views/Edit%20Profile.dart';
-import 'package:projet2/User/Views/HomeUserPage.dart';
 import 'package:projet2/User/Views/Settings.dart';
-import 'package:projet2/User/Widget/Navigation.dart';
 import 'package:projet2/features/challenges/weekly_challenges_page.dart';
-import 'package:projet2/features/conversation/conversation_drills_page.dart';
 import 'package:projet2/features/expressions/professional_expressions_page.dart';
 import 'package:projet2/features/clinical_cases/clinical_cases_page.dart';
-import 'package:projet2/features/exams/exam_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -64,7 +58,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       ),
       child: Column(
         children: [
-          // ── Header avec gradient ──────────────────────────────────────
+          // ── Header ───────────────────────────────────────────────────
           _buildHeader(),
 
           // ── Menu ─────────────────────────────────────────────────────
@@ -73,37 +67,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
               padding: const EdgeInsets.symmetric(vertical: 12),
               children: [
                 _DrawerItem(
-                  icon: CupertinoIcons.house_fill,
-                  title: 'Accueil',
-                  color: kBlue,
-                  onTap: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const NavigationHomePage()),
-                      (route) => false,
-                    );
-                  },
-                ),
-                _DrawerItem(
-                  icon: CupertinoIcons.person_fill,
-                  title: 'Profil',
-                  color: kPurple,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => EditProfilePage()),
-                  ),
-                ),
-                _DrawerItem(
-                  icon: CupertinoIcons.book_fill,
-                  title: 'Chapitres',
-                  color: kGreen,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HomeUserPage()),
-                  ),
-                ),
-                _DrawerItem(
                   icon: CupertinoIcons.flag_fill,
                   title: 'Défis hebdomadaires',
                   color: kBlue,
@@ -111,34 +74,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => const WeeklyChallengesPage(),
-                    ),
-                  ),
-                ),
-                _DrawerItem(
-                  icon: CupertinoIcons.doc_text_search,
-                  title: 'Examen final',
-                  color: kPurple,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ExamPage.finalExam(
-                        title: 'Examen final',
-                        subtitle: 'Révision globale des chapitres 1 à 11',
-                        accentColor: kPurple,
-                        accentLight: kPurpleLight,
-                        phrases: buildFinalExamPool(),
-                      ),
-                    ),
-                  ),
-                ),
-                _DrawerItem(
-                  icon: CupertinoIcons.chat_bubble_2_fill,
-                  title: 'Fiches de conversation',
-                  color: kBlue,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ConversationDrillsPage(),
                     ),
                   ),
                 ),
@@ -194,14 +129,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 56, 24, 28),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [kBlue, kPurple],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomRight: Radius.circular(0),
-        ),
+        color: kFlagBlack,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,10 +139,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withOpacity(0.08),
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withOpacity(0.14),
                 width: 2,
               ),
             ),

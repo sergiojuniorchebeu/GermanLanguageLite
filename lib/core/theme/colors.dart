@@ -11,7 +11,7 @@ const kGreen = kFlagRed;
 const kPurple = Color(0xFFE2AB12);
 const kPeach = kFlagGold;
 const kYellow = Color(0xFFFFD55A);
-const kCoral = Color(0xFF9D171B);
+const kCoral = Color(0xFF8C1416);
 
 // ── Fonds & surfaces ─────────────────────────────────────────────────────────
 const kScaffold = Color(0xFFF7F1E6);
@@ -39,3 +39,5 @@ const kCoralLight = Color(0xFFF4D8D8);
 const kPurpleLight = Color(0xFFFFF1C7);
 const kPeachLight = Color(0xFFFFF4D2);
 const kYellowLight = Color(0xFFFFF6DC);
+const kGreenSuccess      = Color(0xFF6B8F71);
+const kGreenSuccessLight = Color(0xFFE4EEE5);
