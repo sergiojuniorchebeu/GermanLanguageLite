@@ -14,6 +14,7 @@ class ChapterData {
   final IconData icon;
   final Widget? page;
   final bool isComingSoon;
+  final String? imagePath; // ← nouveau
 
   const ChapterData({
     required this.number,
@@ -24,11 +25,12 @@ class ChapterData {
     required this.icon,
     this.page,
     this.isComingSoon = false,
+    this.imagePath, // ← nouveau
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ChapterCard — Redesign v3 (Dribbble-inspired)
+// ChapterCard — Image de fond à gauche avec fondu vers kSurface
 // ─────────────────────────────────────────────────────────────────────────────
 class ChapterCard extends StatefulWidget {
   final ChapterData chapter;
@@ -53,249 +55,211 @@ class _ChapterCardState extends State<ChapterCard> {
 
   @override
   Widget build(BuildContext context) {
+    final accent = _isDisabled ? kInk300 : widget.chapter.accentColor;
+    final accentLight = _isDisabled ? kInk100 : widget.chapter.accentLight;
+    final progress = widget.progress.clamp(0.0, 1.0);
+    final hasImage = widget.chapter.imagePath != null;
+
     return GestureDetector(
       onTap: widget.onTap,
       onTapDown: _isDisabled ? null : (_) => setState(() => _pressed = true),
       onTapUp: _isDisabled ? null : (_) => setState(() => _pressed = false),
       onTapCancel: _isDisabled ? null : () => setState(() => _pressed = false),
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: _isDisabled ? 0.48 : 1.0,
-        child: AnimatedScale(
-          scale: _pressed ? 0.97 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: double.infinity,
-            constraints: const BoxConstraints(minHeight: 190),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: kBorder),
-              boxShadow: _pressed || _isDisabled
-                  ? []
-                  : [
-                BoxShadow(
-                  color: widget.chapter.accentColor.withOpacity(0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, 6),
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1,
+        duration: const Duration(milliseconds: 140),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          decoration: BoxDecoration(
+            color: kSurface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: kBorder),
+            boxShadow: _pressed || _isDisabled
+                ? []
+                : [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+
+                // ── Bande colorée gauche ──────────────────────────
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(width: 3, color: accent),
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  // ── Numéro en filigrane ──────────────────────────────────
-                  Positioned(
-                    bottom: -12,
-                    right: -4,
-                    child: Text(
-                      '${widget.chapter.number}',
-                      style: TextStyle(
-                        fontSize: 72,
-                        fontWeight: FontWeight.w800,
-                        color: _isDisabled
-                            ? kInk900.withOpacity(0.04)
-                            : widget.chapter.accentColor.withOpacity(0.06),
-                        height: 1,
-                      ),
-                    ),
-                  ),
 
-                  // ── Barre d'accent colorée en haut ───────────────────────
+                // ── Image de fond à gauche avec fondu ─────────────
+                if (hasImage)
                   Positioned(
+                    left: 3, // après la bande colorée
                     top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 3,
-                      color: _isDisabled ? kInk500 : widget.chapter.accentColor,
-                    ),
-                  ),
-
-                  // ── Contenu principal ────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 18, 14, 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                    bottom: 0,
+                    width: 100,
+                    child: Stack(
                       children: [
-                        // Icône + badge numéro
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              width: 46,
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: _isDisabled
-                                    ? kInk100
-                                    : widget.chapter.accentLight,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Icon(
-                                _isDisabled
-                                    ? Icons.lock_outline_rounded
-                                    : widget.chapter.icon,
-                                color: _isDisabled
-                                    ? kInk500
-                                    : widget.chapter.accentColor,
-                                size: 22,
+                        // Image
+                        Positioned.fill(
+                          child: Image.asset(
+                            widget.chapter.imagePath!,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.centerLeft,
+                          ),
+                        ),
+                        // Gradient fondu vers kSurface
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  kSurface.withValues(alpha: 0.0),
+                                  kSurface.withValues(alpha: 0.55),
+                                  kSurface,
+                                ],
+                                stops: const [0.0, 0.55, 1.0],
                               ),
                             ),
-                            _ChapterBadge(
-                              label: _isDisabled
-                                  ? 'Bientôt'
-                                  : 'Ch.${widget.chapter.number}',
-                              color: _isDisabled
-                                  ? kInk500
-                                  : widget.chapter.accentColor,
-                              bgColor: _isDisabled
-                                  ? kInk100
-                                  : widget.chapter.accentLight,
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // Titre FR
-                        Text(
-                          widget.chapter.titleFR,
-                          style: AppText.labelM.copyWith(
-                            fontSize: 12.5,
-                            height: 1.38,
-                            color: kInk900,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-
-                        const SizedBox(height: 3),
-
-                        // Titre DE
-                        Text(
-                          widget.chapter.titleDE,
-                          style: AppText.bodyS.copyWith(
-                            fontSize: 10,
-                            fontStyle: FontStyle.italic,
-                            color: kInk500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // Barre de progression
-                        _ProgressSection(
-                          color: _isDisabled
-                              ? kInk500
-                              : widget.chapter.accentColor,
-                          trackColor: _isDisabled
-                              ? kInk100
-                              : widget.chapter.accentLight,
-                          value: widget.progress,
-                          isDisabled: _isDisabled,
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+
+                // ── Numéro fantôme ────────────────────────────────
+                Positioned(
+                  right: -4,
+                  bottom: 10,
+                  child: Text(
+                    '${widget.chapter.number}',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 72,
+                      fontWeight: FontWeight.w900,
+                      color: accent.withValues(alpha: 0.07),
+                      height: 1,
+                    ),
+                  ),
+                ),
+
+                // ── Contenu ───────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Badge "Kap X" ou "Bientôt" — sans icône
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: accentLight,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              _isDisabled
+                                  ? 'Bientot'
+                                  : 'Kap ${widget.chapter.number}',
+                              style: AppText.caption.copyWith(
+                                color: accent,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 9.8,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Titres
+                      Text(
+                        widget.chapter.titleFR,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.labelL.copyWith(
+                          color: kInk900,
+                          fontSize: 13.5,
+                          height: 1.3,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        widget.chapter.titleDE,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.bodyS.copyWith(
+                          color: kInk500,
+                          fontStyle: FontStyle.italic,
+                          fontSize: 11,
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // Progression
+                      Row(
+                        children: [
+                          Text(
+                            _progressLabel(progress),
+                            style: AppText.caption.copyWith(
+                              color: _isDisabled ? kInk500 : accent,
+                              fontSize: 9.6,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (!_isDisabled)
+                            Icon(Icons.north_east_rounded,
+                                color: accent, size: 12),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 5,
+                          backgroundColor: accentLight,
+                          valueColor: AlwaysStoppedAnimation<Color>(accent),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
-}
 
-class _ChapterBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Color bgColor;
-
-  const _ChapterBadge({
-    required this.label,
-    required this.color,
-    required this.bgColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: AppText.caption.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-          fontSize: 10,
-          letterSpacing: 0.2,
-        ),
-      ),
-    );
-  }
-}
-
-class _ProgressSection extends StatelessWidget {
-  final Color color;
-  final Color trackColor;
-  final double value;
-  final bool isDisabled;
-
-  const _ProgressSection({
-    required this.color,
-    required this.trackColor,
-    required this.value,
-    required this.isDisabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final label = isDisabled
-        ? 'Non disponible'
-        : value == 0.0
-        ? 'Non commencé'
-        : value >= 1.0
-        ? 'Complété ✓'
-        : '${(value * 100).round()}%';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppText.caption.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontSize: 10,
-          ),
-        ),
-        const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: value,
-            backgroundColor: trackColor,
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 5,
-          ),
-        ),
-      ],
-    );
+  String _progressLabel(double value) {
+    if (_isDisabled) return 'Disponible bientot';
+    if (value <= 0) return 'A commencer';
+    if (value >= 1) return 'Termine';
+    return '${(value * 100).round()}% complete';
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LanguageButton — Redesign v3 : pill arrondi style switcher
+// LanguageButton
 // ─────────────────────────────────────────────────────────────────────────────
 class LanguageButton extends StatefulWidget {
   final String flag;
@@ -341,7 +305,7 @@ class _LanguageButtonState extends State<LanguageButton> {
             boxShadow: widget.isActive
                 ? [
               BoxShadow(
-                color: kBlue.withOpacity(0.22),
+                color: kBlue.withValues(alpha: 0.22),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -370,7 +334,7 @@ class _LanguageButtonState extends State<LanguageButton> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TaskCard — Redesign v3 : hover translate + icône thématique
+// TaskCard
 // ─────────────────────────────────────────────────────────────────────────────
 class TaskCard extends StatefulWidget {
   final String title;
@@ -426,7 +390,7 @@ class _TaskCardState extends State<TaskCard> {
                 ? []
                 : [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -434,7 +398,6 @@ class _TaskCardState extends State<TaskCard> {
           ),
           child: Row(
             children: [
-              // Icône
               Container(
                 width: 42,
                 height: 42,
@@ -448,15 +411,11 @@ class _TaskCardState extends State<TaskCard> {
                   _isDisabled
                       ? Icons.lock_outline_rounded
                       : (widget.leadingIcon ?? Icons.menu_book_rounded),
-                  color: _isDisabled
-                      ? kInk500
-                      : (widget.iconColor ?? kBlue),
+                  color: _isDisabled ? kInk500 : (widget.iconColor ?? kBlue),
                   size: 20,
                 ),
               ),
               const SizedBox(width: 14),
-
-              // Textes
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,16 +441,11 @@ class _TaskCardState extends State<TaskCard> {
                   ],
                 ),
               ),
-
               const SizedBox(width: 8),
-
-              // Flèche
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: _isDisabled
-                    ? kInk500
-                    : (widget.iconColor ?? kBlue),
+                color: _isDisabled ? kInk500 : (widget.iconColor ?? kBlue),
               ),
             ],
           ),

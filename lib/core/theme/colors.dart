@@ -1,34 +1,41 @@
 import 'package:flutter/material.dart';
 
-// ── Primaires ─────────────────────────────────────────────────────────────────
-const kBlue   = Color(0xFF65ADFA); // Bleu ciel lumineux
-const kGreen  = Color(0xFF5FD4A0); // Vert émeraude pastel
+// ── Palette drapeau allemand ─────────────────────────────────────────────────
+const kFlagBlack = Color(0xFF111111);
+const kFlagRed = Color(0xFFBC2026);
+const kFlagGold = Color(0xFFF2C230);
 
-// ── Fond & Surfaces ───────────────────────────────────────────────────────────
-const kScaffold = Color(0xFFFAFBFC); // Blanc cassé
-const kSurface  = Colors.white;
+// ── Alias conservés pour le code existant ────────────────────────────────────
+const kBlue = kFlagBlack;
+const kGreen = kFlagRed;
+const kPurple = Color(0xFFE2AB12);
+const kPeach = kFlagGold;
+const kYellow = Color(0xFFFFD55A);
+const kCoral = Color(0xFF9D171B);
 
-// ── Ink (textes & icônes) ─────────────────────────────────────────────────────
-const kInk900 = Color(0xFF2D3748); // Gris foncé avec du caractère
-const kInk800 = Color(0xFF374151);
-const kInk700 = Color(0xFF4A5568); // Gris moyen
-const kInk600 = Color(0xFF5A6777);
-const kInk500 = Color(0xFF718096); // Gris clair
-const kInk100 = Color(0xFFF7FAFC); // Gris très clair (fond subtil)
+// ── Fonds & surfaces ─────────────────────────────────────────────────────────
+const kScaffold = Color(0xFFF7F1E6);
+const kSurface = Colors.white;
+const kSurfaceMuted = Color(0xFFF0E7D7);
+const kSurfaceDark = Color(0xFF1A1715);
 
-// ── Bordures ──────────────────────────────────────────────────────────────────
-const kBorder = Color(0xFFE2E8F0); // Bordure délicate
+// ── Ink (textes & icônes) ────────────────────────────────────────────────────
+const kInk900 = Color(0xFF18120C);
+const kInk800 = Color(0xFF2A211A);
+const kInk700 = Color(0xFF4B4035);
+const kInk600 = Color(0xFF6C5D4F);
+const kInk500 = Color(0xFF8C7C6B);
+const kInk300 = Color(0xFFD5C7B1);
+const kInk100 = Color(0xFFF5ECDD);
 
-// ── Accents ───────────────────────────────────────────────────────────────────
-const kCoral  = Color(0xFFFF9B9B); // Corail pastel
-const kPurple = Color(0xFFB8A4FF); // Violet pastel
-const kPeach  = Color(0xFFFFB88C); // Pêche vif
-const kYellow = Color(0xFFFFDB6E); // Jaune soleil pastel
+// ── Bordures & ombres ────────────────────────────────────────────────────────
+const kBorder = Color(0xFFE2D2B5);
+const kShadow = Color(0x29150F09);
 
-// ── Versions claires (fonds de chips, avatars d'icônes) ───────────────────────
-const kBlueLight   = Color(0xFFEBF4FF);
-const kGreenLight  = Color(0xFFE8FAF4);
-const kCoralLight  = Color(0xFFFFEFEF);
-const kPurpleLight = Color(0xFFF3F0FF);
-const kPeachLight  = Color(0xFFFFF4EC);
-const kYellowLight = Color(0xFFFFFAE6);
+// ── Versions claires (fonds de chips, avatars d'icônes) ─────────────────────
+const kBlueLight = Color(0xFFEAE3D8);
+const kGreenLight = Color(0xFFF7DFDF);
+const kCoralLight = Color(0xFFF4D8D8);
+const kPurpleLight = Color(0xFFFFF1C7);
+const kPeachLight = Color(0xFFFFF4D2);
+const kYellowLight = Color(0xFFFFF6DC);

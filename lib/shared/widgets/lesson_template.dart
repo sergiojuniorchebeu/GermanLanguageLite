@@ -143,16 +143,12 @@ class _LessonTemplateState extends State<LessonTemplate> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [widget.accentColor, widget.accentColor.withOpacity(0.72)],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      decoration: const BoxDecoration(
+        color: kFlagBlack,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
       ),
       child: Column(
@@ -165,8 +161,11 @@ class _LessonTemplateState extends State<LessonTemplate> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.25),
+                color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
               ),
               child: const Icon(
                 Icons.arrow_back_ios_new_rounded,
@@ -175,21 +174,23 @@ class _LessonTemplateState extends State<LessonTemplate> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
 
           // Tags
           Row(
             children: [
               _HeaderTag(
-                label: 'Ch.${widget.chapterNumber}',
-                textColor: widget.accentColor,
-                bgColor: Colors.white.withOpacity(0.9),
+                label: 'Ch. ${widget.chapterNumber}',
+                textColor: kFlagGold,
+                bgColor: kFlagGold.withValues(alpha: 0.15),
+                borderColor: kFlagGold.withValues(alpha: 0.35),
               ),
               const SizedBox(width: 8),
               _HeaderTag(
-                label: '🇩🇪 Allemand médical',
-                textColor: Colors.white,
-                bgColor: Colors.white.withOpacity(0.22),
+                label: 'Allemand médical',
+                textColor: Colors.white.withValues(alpha: 0.7),
+                bgColor: Colors.white.withValues(alpha: 0.07),
+                borderColor: Colors.white.withValues(alpha: 0.1),
               ),
             ],
           ),
@@ -198,9 +199,11 @@ class _LessonTemplateState extends State<LessonTemplate> {
           // Titre de la leçon
           Text(
             widget.title,
-            style: AppText.h2.copyWith(
+            style: const TextStyle(
+              fontFamily: 'Poppins',
               color: Colors.white,
               fontSize: 20,
+              fontWeight: FontWeight.w700,
               height: 1.3,
             ),
           ),
@@ -485,11 +488,13 @@ class _HeaderTag extends StatelessWidget {
   final String label;
   final Color textColor;
   final Color bgColor;
+  final Color borderColor;
 
   const _HeaderTag({
     required this.label,
     required this.textColor,
     required this.bgColor,
+    this.borderColor = Colors.transparent,
   });
 
   @override
@@ -499,6 +504,7 @@ class _HeaderTag extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
       ),
       child: Text(
         label,

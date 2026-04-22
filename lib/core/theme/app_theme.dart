@@ -5,13 +5,12 @@ import 'colors.dart';
 class AppTheme {
   AppTheme._();
 
-  // ── Thème clair ────────────────────────────────────────────────────────────
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Poppins',
       scaffoldBackgroundColor: kScaffold,
-      colorScheme: ColorScheme(
+      colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: kBlue,
         onPrimary: Colors.white,
@@ -29,20 +28,18 @@ class AppTheme {
         onError: Colors.white,
         errorContainer: kCoralLight,
         onErrorContainer: kInk900,
-        surface: Colors.white,
+        surface: kSurface,
         onSurface: kInk900,
-        surfaceContainerHighest: kInk100,
+        surfaceContainerHighest: kSurfaceMuted,
         onSurfaceVariant: kInk600,
         outline: kBorder,
         outlineVariant: kBorder,
-        shadow: Colors.black,
+        shadow: kShadow,
         scrim: Colors.black,
         inverseSurface: kInk900,
         onInverseSurface: Colors.white,
         inversePrimary: kBlueLight,
       ),
-
-      // AppBar
       appBarTheme: const AppBarTheme(
         backgroundColor: kScaffold,
         elevation: 0,
@@ -61,17 +58,15 @@ class AppTheme {
         ),
         centerTitle: true,
       ),
-
-      // Boutons principaux
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: kBlue,
           foregroundColor: Colors.white,
           elevation: 0,
           shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: const TextStyle(
             fontFamily: 'Poppins',
@@ -80,11 +75,9 @@ class AppTheme {
           ),
         ),
       ),
-
-      // Boutons texte
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: kBlue,
+          foregroundColor: kInk900,
           textStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w600,
@@ -92,21 +85,19 @@ class AppTheme {
           ),
         ),
       ),
-
-      // Inputs
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: kSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: kBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: kBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: kBlue, width: 1.5),
         ),
         hintStyle: const TextStyle(
@@ -115,20 +106,16 @@ class AppTheme {
           fontSize: 14,
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         isDense: false,
       ),
-
-      // Dividers
       dividerTheme: const DividerThemeData(
         color: kBorder,
         thickness: 1,
         space: 0,
       ),
-
-      // Drawer
       drawerTheme: const DrawerThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: kSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
@@ -137,10 +124,8 @@ class AppTheme {
           ),
         ),
       ),
-
-      // Bottom Navigation
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Colors.white,
+        backgroundColor: kSurface,
         selectedItemColor: kBlue,
         unselectedItemColor: kInk500,
         showSelectedLabels: false,
@@ -148,21 +133,17 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-
-      // Progress Indicator
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: kBlue,
-        linearTrackColor: kBlueLight,
-        circularTrackColor: kBlueLight,
+        color: kGreen,
+        linearTrackColor: kInk100,
+        circularTrackColor: kInk100,
       ),
-
-      // Chip
       chipTheme: ChipThemeData(
-        backgroundColor: kInk100,
+        backgroundColor: kSurfaceMuted,
         selectedColor: kBlueLight,
         side: const BorderSide(color: kBorder),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(999),
         ),
         labelStyle: const TextStyle(
           fontFamily: 'Poppins',
@@ -170,41 +151,49 @@ class AppTheme {
           color: kInk700,
         ),
       ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: kSurface,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: kBorder),
+        ),
+      ),
     );
   }
 
-  // ── Thème sombre ───────────────────────────────────────────────────────────
   static ThemeData get dark {
-    const darkSurface = Color(0xFF1F2937);
-    const darkBackground = Color(0xFF111827);
-    const darkBorder = Color(0xFF374151);
+    const darkSurface = Color(0xFF1D1815);
+    const darkBackground = Color(0xFF120F0D);
+    const darkBorder = Color(0xFF3B312A);
 
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Poppins',
       scaffoldBackgroundColor: darkBackground,
-      colorScheme: ColorScheme(
+      colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: kBlue,
         onPrimary: Colors.white,
-        primaryContainer: const Color(0xFF1E3A5F),
+        primaryContainer: Color(0xFF1E3A5F),
         onPrimaryContainer: Colors.white,
         secondary: kGreen,
         onSecondary: Colors.white,
-        secondaryContainer: const Color(0xFF1A3D30),
+        secondaryContainer: Color(0xFF1A3D30),
         onSecondaryContainer: Colors.white,
         tertiary: kPurple,
         onTertiary: Colors.white,
-        tertiaryContainer: const Color(0xFF2D2456),
+        tertiaryContainer: Color(0xFF2D2456),
         onTertiaryContainer: Colors.white,
         error: kCoral,
         onError: Colors.white,
-        errorContainer: const Color(0xFF4A1515),
+        errorContainer: Color(0xFF4A1515),
         onErrorContainer: Colors.white,
         surface: darkSurface,
         onSurface: Colors.white,
-        surfaceContainerHighest: const Color(0xFF2D3748),
-        onSurfaceVariant: const Color(0xFF9CA3AF),
+        surfaceContainerHighest: Color(0xFF2D3748),
+        onSurfaceVariant: Color(0xFF9CA3AF),
         outline: darkBorder,
         outlineVariant: darkBorder,
         shadow: Colors.black,

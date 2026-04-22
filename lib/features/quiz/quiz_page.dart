@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:projet2/core/services/progress_service.dart';
 import 'package:projet2/core/services/sfx_service.dart';
 import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/core/theme/text_styles.dart';
 import 'package:projet2/shared/widgets/lesson_template.dart';
 
+// Couleurs sémantiques quiz — indépendantes de la palette drapeau
+const _kSuccess = Color(0xFF16A34A);
+const _kSuccessLight = Color(0xFFDCFCE7);
+const _kError = Color(0xFFDC2626);
+const _kErrorLight = Color(0xFFFEE2E2);
+
 // ─────────────────────────────────────────────────────────────────────────────
-// QuizPage — QCM généré dynamiquement depuis les PhraseEntry du cours
+// QuizPage
 // ─────────────────────────────────────────────────────────────────────────────
 class QuizPage extends StatefulWidget {
   final int chapterNumber;
@@ -46,7 +51,6 @@ class _QuizPageState extends State<QuizPage>
   void initState() {
     super.initState();
     _questions = _QuizQuestion.generateFrom(widget.phrases);
-
     _feedbackController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -65,8 +69,7 @@ class _QuizPageState extends State<QuizPage>
 
   void _selectOption(int optionIndex) {
     if (_selectedOption != null) return;
-    final question = _questions[_currentIndex];
-    final isCorrect = optionIndex == question.correctIndex;
+    final isCorrect = optionIndex == _questions[_currentIndex].correctIndex;
     if (isCorrect) {
       unawaited(SfxService.playQuizSuccess());
     } else {
@@ -85,6 +88,7 @@ class _QuizPageState extends State<QuizPage>
         _currentIndex++;
         _selectedOption = null;
       });
+      _feedbackController.reset();
     } else {
       final previousLevel = await ProgressService.getLevelInfo();
       final previousBadges = await ProgressService.getBadges();
@@ -97,11 +101,9 @@ class _QuizPageState extends State<QuizPage>
       final currentLevel = await ProgressService.getLevelInfo();
       final currentBadges = await ProgressService.getBadges();
       final newUnlockedBadges = currentBadges
-          .where((badge) => badge.unlocked)
+          .where((b) => b.unlocked)
           .where(
-            (badge) => !previousBadges.any(
-              (previous) => previous.id == badge.id && previous.unlocked,
-            ),
+            (b) => !previousBadges.any((p) => p.id == b.id && p.unlocked),
           )
           .toList();
 
@@ -116,7 +118,6 @@ class _QuizPageState extends State<QuizPage>
       } else if (_correctCount == _questions.length) {
         unawaited(SfxService.playGentleNotification());
       }
-
       setState(() {
         _isFinished = true;
         _xpGained = xp;
@@ -134,185 +135,36 @@ class _QuizPageState extends State<QuizPage>
     );
   }
 
-  // ── Résultat final ────────────────────────────────────────────────────────
-  Widget _buildResult() {
-    final score = _correctCount / _questions.length;
-    final percent = (score * 100).round();
-    final emoji = percent >= 80
-        ? '🎉'
-        : percent >= 50
-            ? '👍'
-            : '💪';
-    final label = percent >= 80
-        ? 'Excellent !'
-        : percent >= 50
-            ? 'Bien joué !'
-            : 'Continue d\'apprendre !';
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: widget.accentLight,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 48)),
-            ),
-            const SizedBox(height: 28),
-            Text('Quiz terminé !', style: AppText.h2),
-            const SizedBox(height: 8),
-            Text(label, style: AppText.bodyM.copyWith(color: kInk500)),
-            const SizedBox(height: 32),
-            // Score
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: kBorder),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '$_correctCount / ${_questions.length}',
-                    style: AppText.h1.copyWith(
-                      color: widget.accentColor,
-                      fontSize: 40,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text('bonnes réponses', style: AppText.bodyS),
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: score,
-                      backgroundColor: widget.accentLight,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(widget.accentColor),
-                      minHeight: 8,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_xpGained > 0) ...[
-              const SizedBox(height: 20),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: kYellowLight,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: kYellow),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('⚡', style: TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    Text(
-                      '+$_xpGained XP gagnés !',
-                      style: AppText.labelL.copyWith(color: kInk800),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 36),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.accentColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  '← Retour à la leçon',
-                  style: AppText.labelL.copyWith(color: Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ── Question ─────────────────────────────────────────────────────────────
+
   Widget _buildQuestion() {
     final question = _questions[_currentIndex];
     final progress = (_currentIndex + 1) / _questions.length;
 
     return Column(
       children: [
-        // Header
         _buildHeader(progress),
-        const SizedBox(height: 24),
-
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Phrase en allemand
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: widget.accentLight,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: widget.accentColor.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Text('🇩🇪', style: TextStyle(fontSize: 16)),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Traduire en français :',
-                            style: AppText.labelS.copyWith(
-                              color: widget.accentColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        question.questionPhrase,
-                        style: AppText.h3.copyWith(
-                          color: kInk900,
-                          fontSize: 17,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+                // Carte phrase allemande
+                _QuestionCard(phrase: question.questionPhrase),
+                const SizedBox(height: 28),
+
+                const Text(
+                  'SÉLECTIONNEZ LA TRADUCTION',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: kInk500,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Sélectionnez la traduction :',
-                  style: AppText.labelS.copyWith(color: kInk500),
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 // Options
                 ...List.generate(
@@ -322,40 +174,18 @@ class _QuizPageState extends State<QuizPage>
                     index: i,
                     selectedIndex: _selectedOption,
                     correctIndex: question.correctIndex,
-                    accentColor: widget.accentColor,
                     onTap: () => _selectOption(i),
                   ),
                 ),
 
                 // Bouton Suivant
                 if (_selectedOption != null) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   FadeTransition(
                     opacity: _feedbackAnim,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _nextQuestion,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.accentColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          _currentIndex < _questions.length - 1
-                              ? 'Question suivante →'
-                              : 'Voir les résultats →',
-                          style: AppText.labelL.copyWith(color: Colors.white),
-                        ),
-                      ),
-                    ),
+                    child: _buildNextButton(),
                   ),
                 ],
-                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -364,24 +194,75 @@ class _QuizPageState extends State<QuizPage>
     );
   }
 
+  Widget _buildNextButton() {
+    final isLast = _currentIndex >= _questions.length - 1;
+    return SizedBox(
+      width: double.infinity,
+      child: GestureDetector(
+        onTap: _nextQuestion,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: kFlagBlack,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                isLast ? 'Voir les résultats' : 'Question suivante',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_rounded,
+                  color: Colors.white, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Header ────────────────────────────────────────────────────────────────
+
   Widget _buildHeader(double progress) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(bottom: BorderSide(color: kBorder)),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      decoration: const BoxDecoration(
+        color: kFlagBlack,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
                 onTap: () => Navigator.pop(context),
-                child: const Icon(
-                  Icons.close_rounded,
-                  color: kInk500,
-                  size: 24,
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(11),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -390,14 +271,23 @@ class _QuizPageState extends State<QuizPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Quiz · ${widget.lessonTitle}',
-                      style: AppText.labelM.copyWith(color: kInk700),
+                      widget.lessonTitle,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       '${_currentIndex + 1} / ${_questions.length}',
-                      style: AppText.labelS,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white.withValues(alpha: 0.45),
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -406,27 +296,190 @@ class _QuizPageState extends State<QuizPage>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: widget.accentLight,
+                  color: kFlagGold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: kFlagGold.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Text(
-                  'Ch.${widget.chapterNumber}',
-                  style: AppText.caption.copyWith(
-                    color: widget.accentColor,
+                child: const Text(
+                  'Quiz',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: kFlagGold,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: kInk100,
-              valueColor: AlwaysStoppedAnimation<Color>(widget.accentColor),
-              minHeight: 5,
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+              valueColor: const AlwaysStoppedAnimation<Color>(kFlagGold),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Résultat ─────────────────────────────────────────────────────────────
+
+  Widget _buildResult() {
+    final score = _correctCount / _questions.length;
+    final percent = (score * 100).round();
+
+    final bool isExcellent = percent >= 80;
+    final bool isGood = percent >= 50;
+
+    final Color scoreColor = isExcellent
+        ? _kSuccess
+        : isGood
+            ? kFlagGold
+            : _kError;
+    final String label = isExcellent
+        ? 'Excellent !'
+        : isGood
+            ? 'Bien joué !'
+            : 'Continue !';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 16),
+
+          // Score principal
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: kFlagBlack,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  '$percent%',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: scoreColor == _kSuccess ? kFlagGold : scoreColor,
+                    fontSize: 56,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Bonne/mauvaise réponse breakdown
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: _ResultStat(
+                        value: '$_correctCount',
+                        label: 'Correctes',
+                        color: _kSuccess,
+                        bg: _kSuccessLight,
+                        icon: Icons.check_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ResultStat(
+                        value: '${_questions.length - _correctCount}',
+                        label: 'Incorrectes',
+                        color: _kError,
+                        bg: _kErrorLight,
+                        icon: Icons.close_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // XP gagnés
+          if (_xpGained > 0) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF4D2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: kFlagGold.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(Icons.star_rounded, color: kFlagGold, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    '+$_xpGained XP gagnés',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Color(0xFF7A4A00),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 28),
+
+          // Bouton retour
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: kFlagBlack,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.arrow_back_rounded,
+                        color: Colors.white, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Retour à la leçon',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -435,13 +488,88 @@ class _QuizPageState extends State<QuizPage>
   }
 }
 
+// ── Question Card ─────────────────────────────────────────────────────────────
+
+class _QuestionCard extends StatelessWidget {
+  final String phrase;
+
+  const _QuestionCard({required this.phrase});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(17),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0, top: 0, bottom: 0,
+              child: Container(width: 4, color: kFlagBlack),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text('🇩🇪', style: TextStyle(fontSize: 13)),
+                      SizedBox(width: 6),
+                      Text(
+                        'TRADUIRE EN FRANÇAIS',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: kInk500,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    phrase,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      color: kInk900,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Option Button ─────────────────────────────────────────────────────────────
+
 class _OptionButton extends StatelessWidget {
   final String label;
   final int index;
   final int? selectedIndex;
   final int correctIndex;
-  final Color accentColor;
   final VoidCallback onTap;
 
   const _OptionButton({
@@ -449,7 +577,6 @@ class _OptionButton extends StatelessWidget {
     required this.index,
     required this.selectedIndex,
     required this.correctIndex,
-    required this.accentColor,
     required this.onTap,
   });
 
@@ -459,78 +586,183 @@ class _OptionButton extends StatelessWidget {
     final bool isSelected = selectedIndex == index;
     final bool isCorrect = index == correctIndex;
 
-    Color bgColor = Colors.white;
-    Color borderColor = kBorder;
-    Color textColor = kInk900;
-    Widget? trailingIcon;
+    final bool showSuccess = isAnswered && isCorrect;
+    final bool showError = isAnswered && isSelected && !isCorrect;
+    final bool isDimmed = isAnswered && !isCorrect && !isSelected;
 
-    if (isAnswered) {
-      if (isCorrect) {
-        bgColor = kGreenLight;
-        borderColor = kGreen;
-        textColor = kInk900;
-        trailingIcon =
-            const Icon(Icons.check_circle_rounded, color: kGreen, size: 20);
-      } else if (isSelected) {
-        bgColor = kCoralLight;
-        borderColor = kCoral;
-        textColor = kInk900;
-        trailingIcon =
-            const Icon(Icons.cancel_rounded, color: kCoral, size: 20);
-      }
+    Color bg;
+    Color border;
+    Color badgeBg;
+    Color badgeFg;
+    Color labelColor;
+
+    if (showSuccess) {
+      bg = _kSuccessLight;
+      border = _kSuccess;
+      badgeBg = _kSuccess;
+      badgeFg = Colors.white;
+      labelColor = const Color(0xFF14532D);
+    } else if (showError) {
+      bg = _kErrorLight;
+      border = _kError;
+      badgeBg = _kError;
+      badgeFg = Colors.white;
+      labelColor = const Color(0xFF7F1D1D);
+    } else {
+      bg = Colors.white;
+      border = kBorder;
+      badgeBg = kInk100;
+      badgeFg = kInk600;
+      labelColor = kInk900;
     }
 
     return GestureDetector(
       onTap: isAnswered ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: isAnswered && isCorrect
-                    ? kGreen
-                    : isAnswered && isSelected
-                        ? kCoral
-                        : kInk100,
-                shape: BoxShape.circle,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isDimmed ? 0.42 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: border,
+              width: showSuccess || showError ? 1.5 : 1.0,
+            ),
+            boxShadow: isAnswered
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
+                child: showSuccess
+                    ? const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 17)
+                    : showError
+                        ? const Icon(Icons.close_rounded,
+                            color: Colors.white, size: 17)
+                        : Text(
+                            String.fromCharCode(65 + index),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              color: badgeFg,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
               ),
-              alignment: Alignment.center,
-              child: Text(
-                String.fromCharCode(65 + index), // A, B, C, D
-                style: AppText.labelS.copyWith(
-                  color: isAnswered && (isCorrect || isSelected)
-                      ? Colors.white
-                      : kInk500,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: labelColor,
+                    fontSize: 14,
+                    fontWeight: showSuccess || showError
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                    height: 1.35,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: AppText.bodyM.copyWith(color: textColor),
-              ),
-            ),
-            if (trailingIcon != null) trailingIcon,
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+// ── Result Stat ───────────────────────────────────────────────────────────────
+
+class _ResultStat extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+  final Color bg;
+  final IconData icon;
+
+  const _ResultStat({
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.bg,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: color.withValues(alpha: 0.7),
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Question Model ─────────────────────────────────────────────────────────────
+
 class _QuizQuestion {
   final String questionPhrase;
   final String correctAnswer;
@@ -546,7 +778,6 @@ class _QuizQuestion {
 
   static List<_QuizQuestion> generateFrom(List<PhraseEntry> phrases) {
     final rng = Random();
-    // Limiter à 8 questions max
     final pool = List<PhraseEntry>.from(phrases)..shuffle(rng);
     final selected = pool.take(min(8, pool.length)).toList();
 
@@ -554,19 +785,15 @@ class _QuizQuestion {
       final allMeanings = phrases.map((p) => p.meaning).toList();
       final distractors = allMeanings.where((m) => m != entry.meaning).toList()
         ..shuffle(rng);
-
       final optionCount = min(4, phrases.length);
       final options = <String>[entry.meaning];
       options.addAll(distractors.take(optionCount - 1));
       options.shuffle(rng);
-
-      final correctIndex = options.indexOf(entry.meaning);
-
       return _QuizQuestion(
         questionPhrase: entry.phrase,
         correctAnswer: entry.meaning,
         options: options,
-        correctIndex: correctIndex,
+        correctIndex: options.indexOf(entry.meaning),
       );
     }).toList();
   }

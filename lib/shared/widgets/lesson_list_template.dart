@@ -135,23 +135,16 @@ class _LessonListTemplateState extends State<LessonListTemplate> {
     );
   }
 
-  // ── Header avec bannière colorée ─────────────────────────────────────────
+  // ── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            widget.accentColor,
-            widget.accentColor.withOpacity(0.75),
-          ],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      decoration: const BoxDecoration(
+        color: kFlagBlack,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
         ),
       ),
       child: FutureBuilder<Map<String, dynamic>>(
@@ -163,14 +156,18 @@ class _LessonListTemplateState extends State<LessonListTemplate> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Bouton retour
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: const Icon(
                     Icons.arrow_back_ios_new_rounded,
@@ -179,40 +176,58 @@ class _LessonListTemplateState extends State<LessonListTemplate> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Chapitre ${widget.chapterNumber}',
-                  style: AppText.labelS.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+              const SizedBox(height: 22),
+
+              // Badge chapitre
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: kFlagGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: kFlagGold.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Text(
+                      'Chapitre ${widget.chapterNumber}',
+                      style: AppText.labelS.copyWith(
+                        color: kFlagGold,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+
+              // Titres
               Text(
                 widget.chapterTitleFR,
-                style: AppText.h2.copyWith(
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
                   color: Colors.white,
                   fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 widget.chapterTitleDE,
-                style: AppText.bodyM.copyWith(
-                  color: Colors.white.withOpacity(0.8),
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white.withValues(alpha: 0.55),
+                  fontSize: 13,
                   fontStyle: FontStyle.italic,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
+
+              // Card mini examen
               GestureDetector(
                 onTap: () {
                   final chapterExam = getChapterExamData(widget.chapterNumber);
@@ -232,24 +247,28 @@ class _LessonListTemplateState extends State<LessonListTemplate> {
                 },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          color: kFlagGold.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(11),
                         ),
                         child: const Icon(
                           Icons.fact_check_rounded,
-                          color: Colors.white,
+                          color: kFlagGold,
+                          size: 20,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -257,25 +276,33 @@ class _LessonListTemplateState extends State<LessonListTemplate> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Lancer le mini examen',
-                              style:
-                                  AppText.labelL.copyWith(color: Colors.white),
+                            const Text(
+                              'Mini examen',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                color: Colors.white,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               completed
-                                  ? 'Meilleur score: $bestScore%'
-                                  : '8 questions dérivées des leçons du chapitre',
-                              style: AppText.bodyS.copyWith(
-                                color: Colors.white.withOpacity(0.84),
+                                  ? 'Meilleur score : $bestScore%'
+                                  : '8 questions du chapitre',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 11,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward_rounded,
-                        color: Colors.white,
+                        color: Colors.white.withValues(alpha: 0.6),
+                        size: 18,
                       ),
                     ],
                   ),
@@ -375,75 +402,92 @@ class _LessonCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: kBorder),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            // Numéro de leçon
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: accentLight,
-                borderRadius: BorderRadius.circular(13),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
+            children: [
+              // Bande colorée gauche
+              Container(width: 3, height: 72, color: accentColor),
+
+              // Numéro de leçon
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: accentLight,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${index + 1}',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
               ),
-              alignment: Alignment.center,
-              child: Text(
-                '${index + 1}',
-                style: AppText.h3.copyWith(
-                  fontSize: 18,
+
+              // Texte
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.title,
+                        style: AppText.labelM.copyWith(
+                          color: kInk900,
+                          fontSize: 13,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (entry.description.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          entry.description,
+                          style: AppText.bodyS.copyWith(
+                            fontSize: 11,
+                            color: kInk500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
                   color: accentColor,
                 ),
               ),
-            ),
-            const SizedBox(width: 14),
-
-            // Texte
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.title,
-                    style: AppText.labelM.copyWith(
-                      color: kInk900,
-                      fontSize: 13,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (entry.description.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      entry.description,
-                      style: AppText.bodyS.copyWith(fontSize: 11),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 15,
-              color: accentColor,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
