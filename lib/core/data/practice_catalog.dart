@@ -42,23 +42,37 @@ class ClinicalCase {
   final String id;
   final String title;
   final String situation;
-  final String prompt;
   final Color accentColor;
   final Color accentLight;
-  final List<String> options;
-  final int correctIndex;
-  final String explanation;
+  final int passingScore;
+  final List<ClinicalCaseTurn> turns;
+  final String completionMessage;
 
   const ClinicalCase({
     required this.id,
     required this.title,
     required this.situation,
-    required this.prompt,
     required this.accentColor,
     required this.accentLight,
+    required this.passingScore,
+    required this.turns,
+    required this.completionMessage,
+  });
+}
+
+class ClinicalCaseTurn {
+  final String patientLine;
+  final String prompt;
+  final List<String> options;
+  final int correctIndex;
+  final String feedback;
+
+  const ClinicalCaseTurn({
+    required this.patientLine,
+    required this.prompt,
     required this.options,
     required this.correctIndex,
-    required this.explanation,
+    required this.feedback,
   });
 }
 
@@ -294,120 +308,341 @@ const List<ClinicalCase> clinicalCases = [
     id: 'case_admission',
     title: 'Admission en chambre',
     situation:
-        'Un patient arrive pour son admission. Vous commencez l’accueil et devez lancer la conversation.',
-    prompt: 'Quelle phrase convient le mieux pour débuter ?',
+        'Un patient arrive pour son admission. Vous devez l accueillir, l orienter et démarrer une conversation professionnelle.',
     accentColor: kBlue,
     accentLight: kBlueLight,
-    options: [
-      'Guten Tag, Frau',
-      'Ich werde Ihnen Blut abnehmen.',
-      'Herz-Lungen-Wiederbelebung',
-      'Morgens nüchtern',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine:
+            'Bonjour, je viens pour mon admission. J ai besoin d aide.',
+        prompt: 'Quelle phrase convient le mieux pour débuter ?',
+        options: [
+          'Ich werde gleich Ihre Unterlagen kontrollieren.',
+          'Guten Tag, ich bin die Pflegekraft auf dieser Station.',
+          'Bitte bleiben Sie im Bett und warten Sie hier.',
+        ],
+        correctIndex: 1,
+        feedback:
+            'Pour débuter correctement, on salue le patient et on se présente avant de donner une consigne.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Je ne sais pas quoi faire maintenant.',
+        prompt: 'Quelle phrase utilisez-vous pour guider le patient ?',
+        options: [
+          'Wo haben Sie im Moment Schmerzen?',
+          'Sie müssen zunächst nüchtern bleiben.',
+          'Ich erkläre Ihnen jetzt den Ablauf der Aufnahme.',
+        ],
+        correctIndex: 2,
+        feedback:
+            'Dans une admission, on guide le patient en expliquant la suite de la prise en charge.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Si j ai besoin de quelqu un, comment je fais ?',
+        prompt: 'Quelle réponse donnez-vous ?',
+        options: [
+          'Melden Sie sich bitte nur zur Medikamentenausgabe.',
+          'Falls Sie Hilfe brauchen, benutzen Sie bitte diese Klingel.',
+          'Sie können nach der Visite nach Hause gehen.',
+        ],
+        correctIndex: 1,
+        feedback:
+            'La sonnette fait partie des informations de base à l accueil.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Dois-je remplir quelque chose maintenant ?',
+        prompt: 'Quelle réponse est la plus adaptée dans ce contexte ?',
+        options: [
+          'Bitte füllen Sie zuerst dieses Aufnahmeformular aus.',
+          'Ich bringe Sie jetzt direkt in den OP.',
+          'Sie müssen sechs Stunden streng im Bett bleiben.',
+        ],
+        correctIndex: 0,
+        feedback:
+            'Après l accueil, demander de compléter le formulaire d admission est cohérent.',
+      ),
     ],
-    correctIndex: 0,
-    explanation: 'La salutation d’accueil vient du chapitre 1 sur l’admission.',
+    completionMessage:
+        'Admission validée. Vous avez mené une première conversation d accueil cohérente.',
   ),
   ClinicalCase(
     id: 'case_pain',
     title: 'Douleur thoracique',
     situation:
-        'Le patient vous dit qu’il a mal. Vous voulez commencer l’évaluation correctement.',
-    prompt: 'Quelle question poser en premier ?',
+        'Le patient signale une douleur thoracique. Vous devez évaluer la situation avec les bonnes questions.',
     accentColor: kGreen,
     accentLight: kGreenLight,
-    options: [
-      'Wo haben Sie Schmerzen?',
-      'Ein MRT (Magnetresonanztomographie)',
-      'Die Zahnbürste',
-      'nach Hause',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine: 'Bonjour, j ai mal dans la poitrine.',
+        prompt: 'Quelle question poser en premier ?',
+        options: [
+          'Wo haben Sie Schmerzen?',
+          'Ein MRT.',
+          'nach Hause',
+        ],
+        correctIndex: 0,
+        feedback: 'La première étape est de localiser la douleur.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'La douleur est au centre et elle est très forte.',
+        prompt: 'Quelle question permet d affiner correctement ?',
+        options: [
+          'Seit wann haben Sie Schmerzen?',
+          'Hier sind Ihre Entlassungspapiere.',
+          'Der Stauschlauch.',
+        ],
+        correctIndex: 0,
+        feedback: 'La chronologie oriente l évaluation clinique.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Depuis environ vingt minutes.',
+        prompt: 'Quelle annonce infirmière est la plus adaptée ensuite ?',
+        options: [
+          'Ich rufe den Arzt.',
+          'Ich werde Ihren Verband erneuern.',
+          'Brauchen Sie Hilfe bei der Körperpflege?',
+        ],
+        correctIndex: 0,
+        feedback: 'Une douleur thoracique impose d escalader rapidement.',
+      ),
     ],
-    correctIndex: 0,
-    explanation:
-        'La priorité est de localiser la douleur avec une formule du chapitre 2.',
+    completionMessage:
+        'Évaluation de douleur validée. Vous avez posé les bonnes questions dans le bon ordre.',
   ),
   ClinicalCase(
     id: 'case_hygiene',
     title: 'Aide à la toilette',
-    situation: 'Une patiente âgée demande de l’aide pour sa toilette du matin.',
-    prompt: 'Quelle phrase est la plus adaptée ?',
+    situation:
+        'Une patiente âgée demande de l aide pour sa toilette du matin. Vous devez l accompagner avec tact.',
     accentColor: kPeach,
     accentLight: kPeachLight,
-    options: [
-      'Brauchen Sie Hilfe bei der Körperpflege?',
-      'Die Leukozyten',
-      'Notruf',
-      'Ich werde die Infusionsleitung entlüften.',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine: 'Je me sens faible ce matin, pouvez-vous m aider ?',
+        prompt: 'Quelle phrase est la plus adaptée ?',
+        options: [
+          'Brauchen Sie Hilfe bei der Körperpflege?',
+          'Notruf.',
+          'Ich werde die Infusionsleitung entlüften.',
+        ],
+        correctIndex: 0,
+        feedback:
+            'On valide le besoin d aide de manière simple et respectueuse.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Oui, surtout pour me lever.',
+        prompt: 'Quelle proposition fait sens ensuite ?',
+        options: [
+          'Brauchen Sie Hilfe beim Aufstehen?',
+          'Ein Antiseptikum.',
+          'Haben Sie Durchfall?',
+        ],
+        correctIndex: 0,
+        feedback: 'Le lever sécurisé est une priorité avant la toilette.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Oui, j ai peur de tomber.',
+        prompt: 'Quelle action annoncez-vous ?',
+        options: [
+          'Ich werde das Kopfteil hochstellen.',
+          'Ich werde Ihnen Blut abnehmen.',
+          'Die Reanimation beginnt jetzt.',
+        ],
+        correctIndex: 0,
+        feedback: 'On sécurise et on installe progressivement la patiente.',
+      ),
     ],
-    correctIndex: 0,
-    explanation:
-        'Cette proposition vient du chapitre 4 sur les soins corporels.',
+    completionMessage:
+        'Toilette accompagnée validée. Vous avez répondu avec une logique de soins de base.',
   ),
   ClinicalCase(
     id: 'case_exam',
     title: 'Préparation d’examen',
     situation:
-        'Avant une coronarographie, vous devez donner une consigne de sécurité.',
-    prompt: 'Quelle phrase utilisez-vous ?',
+        'Avant une coronarographie, vous devez préparer le patient et donner des consignes de sécurité claires.',
     accentColor: kYellow,
     accentLight: kYellowLight,
-    options: [
-      'Sie müssen ruhig liegen bleiben.',
-      'Eine lokale Anästhesie',
-      'die Wechselwirkungen',
-      'Haben Sie Durchfall?',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine: 'Je suis inquiet pour cet examen.',
+        prompt: 'Quelle phrase permet de lancer la préparation ?',
+        options: [
+          'Ich werde Sie für diese Untersuchung vorbereiten.',
+          'Haben Sie Blut im Stuhl?',
+          'Nach Hause.',
+        ],
+        correctIndex: 0,
+        feedback: 'On annonce clairement la préparation de l examen.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Que dois-je faire pendant l examen ?',
+        prompt: 'Quelle consigne donnez-vous ?',
+        options: [
+          'Sie müssen ruhig liegen bleiben.',
+          'Brauchen Sie Hilfe bei der Körperpflege?',
+          'Eine Diabetesdiät.',
+        ],
+        correctIndex: 0,
+        feedback: 'Rester immobile fait partie des consignes essentielles.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Et après l examen ?',
+        prompt: 'Quelle information est correcte ?',
+        options: [
+          'Sie müssen 4 bis 6 Stunden strikte Bettruhe einhalten.',
+          'Ich werde die Wunde untersuchen.',
+          'Hier ist die Klingel.',
+        ],
+        correctIndex: 0,
+        feedback: 'Le repos strict post procédure doit être expliqué.',
+      ),
     ],
-    correctIndex: 0,
-    explanation: 'La consigne vient du chapitre 6 sur la coronarographie.',
+    completionMessage:
+        'Préparation d examen validée. Les consignes de sécurité ont été bien transmises.',
   ),
   ClinicalCase(
     id: 'case_postop',
     title: 'Retour de bloc',
     situation:
-        'Un patient revient du bloc opératoire. Vous commencez la surveillance post-opératoire.',
-    prompt: 'Quelle action annoncer en priorité ?',
+        'Un patient revient du bloc opératoire. Vous démarrez la surveillance post-opératoire.',
     accentColor: kGreen,
     accentLight: kGreenLight,
-    options: [
-      'Ich werde Ihre Vitalwerte überprüfen.',
-      'Füllen Sie bitte das Anmeldeformular aus.',
-      'Der Stauschlauch',
-      'Schwindel (m.)',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine: 'Je viens de rentrer du bloc. Je me sens un peu faible.',
+        prompt: 'Quelle action annoncer en priorité ?',
+        options: [
+          'Ich werde Ihre Vitalwerte überprüfen.',
+          'Füllen Sie bitte das Anmeldeformular aus.',
+          'Der Stauschlauch.',
+        ],
+        correctIndex: 0,
+        feedback:
+            'La surveillance des constantes est prioritaire au retour de bloc.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'J ai un pansement, est-ce normal ?',
+        prompt: 'Quelle phrase est la plus adaptée ?',
+        options: [
+          'Ich werde Ihren Verband kontrollieren.',
+          'Muss ich für Sie einen Krankenwagen rufen?',
+          'Ich messe jetzt Ihre Temperatur im couloir.',
+        ],
+        correctIndex: 0,
+        feedback:
+            'Le contrôle du pansement est un élément de surveillance normal.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Quand est-ce que je pourrai bouger un peu ?',
+        prompt: 'Quelle annonce correspond au bon accompagnement ?',
+        options: [
+          'Ich werde Ihnen helfen, sich allmählich zu mobilisieren.',
+          'Ich werde Ihren Blutzucker messen.',
+          'Eine CT Untersuchung.',
+        ],
+        correctIndex: 0,
+        feedback: 'La mobilisation doit être progressive et encadrée.',
+      ),
     ],
-    correctIndex: 0,
-    explanation: 'La surveillance des constantes vient du chapitre 8.',
+    completionMessage:
+        'Surveillance post-op validée. Vous avez priorisé les bons messages infirmiers.',
   ),
   ClinicalCase(
     id: 'case_urgent',
     title: 'Détresse vitale',
     situation:
-        'Vous trouvez une personne en arrêt cardio-respiratoire et devez choisir la conduite à tenir.',
-    prompt: 'Quelle expression correspond à l’action principale ?',
+        'Vous trouvez un patient en détresse vitale. Vous devez réagir vite et employer les bons termes.',
     accentColor: kCoral,
     accentLight: kCoralLight,
-    options: [
-      'Herz-Lungen-Wiederbelebung',
-      'Eine salzarme Diät',
-      'Die Bettlaken',
-      'Hier sind Ihre Entlassungspapiere.',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine: 'Il ne répond plus et respire mal.',
+        prompt: 'Quelle expression correspond à l action principale ?',
+        options: [
+          'Herz-Lungen-Wiederbelebung',
+          'Eine salzarme Diät',
+          'Hier sind Ihre Entlassungspapiere.',
+        ],
+        correctIndex: 0,
+        feedback: 'En arrêt cardio-respiratoire, la réanimation est centrale.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Que vérifiez-vous en urgence ?',
+        prompt: 'Quelle proposition est la plus juste ?',
+        options: [
+          'Bewusstsein und Atmung',
+          'Die Zahnbürste und den Waschlappen',
+          'Die Entlassungspapiere',
+        ],
+        correctIndex: 0,
+        feedback: 'Conscience et respiration sont les premières vérifications.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Le patient reste en difficulté respiratoire.',
+        prompt: 'Quelle phrase annonce une surveillance adaptée ?',
+        options: [
+          'Ich werde die Atemfrequenz und die Sauerstoffsättigung messen.',
+          'Ich werde Ihnen den Tagesablauf erklären.',
+          'Brauchen Sie Hilfe bei der Körperpflege?',
+        ],
+        correctIndex: 0,
+        feedback: 'En urgence, on évalue rapidement la respiration et la SpO2.',
+      ),
     ],
-    correctIndex: 0,
-    explanation: 'La réanimation cardio-pulmonaire est issue du chapitre 10.',
+    completionMessage:
+        'Urgence validée. Vous avez gardé une logique d action prioritaire.',
   ),
   ClinicalCase(
     id: 'case_discharge',
     title: 'Sortie du patient',
     situation:
-        'Le patient quitte le service. Vous devez remettre les documents et vérifier la compréhension.',
-    prompt: 'Quelle phrase convient le mieux ?',
+        'Le patient quitte le service. Vous devez remettre les documents, expliquer la suite et vérifier la compréhension.',
     accentColor: kPeach,
     accentLight: kPeachLight,
-    options: [
-      'Hier sind Ihre Entlassungspapiere. Haben Sie Fragen?',
-      'Ein Antiseptikum',
-      'Die Teilkörperpflege im Bett / am Waschbecken',
-      'Atemstillstand',
+    passingScore: 67,
+    turns: [
+      ClinicalCaseTurn(
+        patientLine: 'Je crois que je peux sortir aujourd hui, c est bien ça ?',
+        prompt: 'Quelle phrase convient le mieux ?',
+        options: [
+          'Hier sind Ihre Entlassungspapiere. Haben Sie Fragen?',
+          'Ein Antiseptikum.',
+          'Atemstillstand.',
+        ],
+        correctIndex: 0,
+        feedback: 'On remet les documents et on ouvre l échange.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Que dois-je faire après la sortie ?',
+        prompt: 'Quelle consigne est la plus adaptée ?',
+        options: [
+          'Sie müssen zu Ihrem Hausarzt gehen.',
+          'Ich werde die Infusionsleitung entlüften.',
+          'Die Leukozyten.',
+        ],
+        correctIndex: 0,
+        feedback: 'Le relais avec le médecin traitant doit être explicité.',
+      ),
+      ClinicalCaseTurn(
+        patientLine: 'Pouvez-vous noter tout ça dans mon dossier ?',
+        prompt: 'Quelle réponse professionnelle donnez-vous ?',
+        options: [
+          'Ich werde die Informationen in der Patientenakte vermerken.',
+          'Ich werde Ihnen Blut abnehmen.',
+          'Wo haben Sie Schmerzen?',
+        ],
+        correctIndex: 0,
+        feedback: 'La traçabilité fait partie de la sortie sécurisée.',
+      ),
     ],
-    correctIndex: 0,
-    explanation: 'Cette formulation vient du chapitre 11 sur la sortie.',
+    completionMessage:
+        'Sortie validée. Vous avez couvert documents, consignes et traçabilité.',
   ),
 ];

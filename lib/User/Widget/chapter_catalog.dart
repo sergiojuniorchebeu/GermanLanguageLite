@@ -23,6 +23,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kBlue,
       accentLight: kBlueLight,
       icon: Icons.assignment_ind_outlined,
+      imagePath: 'assets/img/conversation.png',
       page: LessonListPage(),
     ),
     ChapterData(
@@ -32,6 +33,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kGreen,
       accentLight: kGreenLight,
       icon: Icons.monitor_heart_outlined,
+      imagePath: 'assets/img/heart-rate-monitor.png',
       page: LessonListPage2(),
     ),
     ChapterData(
@@ -41,6 +43,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kPurple,
       accentLight: kPurpleLight,
       icon: Icons.restaurant_outlined,
+      imagePath: 'assets/img/gastrointestinal-tract.png',
       page: LessonListPage3(),
     ),
     ChapterData(
@@ -50,6 +53,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kPeach,
       accentLight: kPeachLight,
       icon: Icons.clean_hands_outlined,
+      imagePath: 'assets/img/medical-checkup.png',
       page: LessonList4Page(),
     ),
     ChapterData(
@@ -59,6 +63,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kCoral,
       accentLight: kCoralLight,
       icon: Icons.biotech_outlined,
+      imagePath: 'assets/img/medical-history.png',
       page: LessonList5Page(),
     ),
     ChapterData(
@@ -68,6 +73,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kYellow,
       accentLight: kYellowLight,
       icon: Icons.science_outlined,
+      imagePath: 'assets/img/examination.png',
       page: LessonList6Page(),
     ),
     ChapterData(
@@ -77,6 +83,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kBlue,
       accentLight: kBlueLight,
       icon: Icons.colorize_outlined,
+      imagePath: 'assets/img/blood-sample.png',
       page: LessonList7Page(),
     ),
     ChapterData(
@@ -86,6 +93,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kGreen,
       accentLight: kGreenLight,
       icon: Icons.local_hospital_outlined,
+      imagePath: 'assets/img/surgery-room.png',
       page: LessonList8Page(),
     ),
     ChapterData(
@@ -95,6 +103,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kPurple,
       accentLight: kPurpleLight,
       icon: Icons.medication_outlined,
+      imagePath: 'assets/img/saline.png',
       page: LessonList9Page(),
     ),
     ChapterData(
@@ -104,6 +113,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kCoral,
       accentLight: kCoralLight,
       icon: Icons.emergency_outlined,
+      imagePath: 'assets/img/emergency.png',
       page: LessonList10Page(),
     ),
     ChapterData(
@@ -113,6 +123,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kPeach,
       accentLight: kPeachLight,
       icon: Icons.transfer_within_a_station_outlined,
+      imagePath: 'assets/img/doctor-visit.png',
       page: LessonList11Page(),
     ),
     ChapterData(
@@ -122,6 +133,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kInk500,
       accentLight: kInk100,
       icon: Icons.accessibility_new_outlined,
+      imagePath: 'assets/img/medical.png',
       isComingSoon: true,
     ),
     ChapterData(
@@ -131,6 +143,7 @@ List<ChapterData> buildStudentChapters() {
       accentColor: kInk500,
       accentLight: kInk100,
       icon: Icons.abc_outlined,
+      imagePath: 'assets/img/messages.png',
       isComingSoon: true,
     ),
   ];

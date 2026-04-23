@@ -1,71 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:projet2/User/Widget/Widget.dart';
-import 'package:projet2/User/Widget/chapter_catalog.dart';
 import 'package:projet2/core/services/progress_service.dart';
 import 'package:projet2/core/theme/colors.dart';
 
-class ChaptersPage extends StatefulWidget {
-  const ChaptersPage({super.key});
+class ChapterLessonListEntry {
+  final String title;
+  final String description;
+  final String image;
+  final String lessonId;
+  final int requiredXp;
+  final Color buttonColor;
+  final Widget Function() pageBuilder;
 
-  @override
-  State<ChaptersPage> createState() => _ChaptersPageState();
+  const ChapterLessonListEntry({
+    required this.title,
+    required this.description,
+    required this.image,
+    required this.lessonId,
+    required this.requiredXp,
+    required this.buttonColor,
+    required this.pageBuilder,
+  });
 }
 
-class _ChaptersPageState extends State<ChaptersPage> {
-  static const Map<int, int> _chapterUnlockXp = {
-    1: 0,
-    2: 180,
-    3: 360,
-    4: 560,
-    5: 780,
-    6: 1020,
-    7: 1280,
-    8: 1560,
-    9: 1860,
-    10: 2180,
-    11: 2520,
-  };
+class ChapterLessonListPage extends StatefulWidget {
+  final int chapterNumber;
+  final String chapterTitleFR;
+  final String chapterTitleDE;
+  final List<ChapterLessonListEntry> lessons;
 
-  late final List<ChapterData> _chapters = buildStudentChapters();
-  Map<int, double> _chapterProgresses = const {};
+  const ChapterLessonListPage({
+    super.key,
+    required this.chapterNumber,
+    required this.chapterTitleFR,
+    required this.chapterTitleDE,
+    required this.lessons,
+  });
+
+  @override
+  State<ChapterLessonListPage> createState() => _ChapterLessonListPageState();
+}
+
+class _ChapterLessonListPageState extends State<ChapterLessonListPage> {
+  Map<String, Map<String, dynamic>> _lessonStats = const {};
   int _xp = 0;
   bool _isLoading = true;
-
-  Iterable<ChapterData> get _availableChapters =>
-      _chapters.where((chapter) => !chapter.isComingSoon);
-
-  int get _completedChaptersCount => _availableChapters
-      .where((chapter) => (_chapterProgresses[chapter.number] ?? 0) >= 1.0)
-      .length;
-
-  int? get _nextRequiredXp {
-    for (final chapter in _availableChapters) {
-      final requiredXp = _chapterUnlockXp[chapter.number] ?? 0;
-      if (_xp < requiredXp) return requiredXp;
-    }
-    return null;
-  }
 
   @override
   void initState() {
     super.initState();
-    _loadProgress();
+    _loadData();
   }
 
-  Future<void> _loadProgress() async {
-    final progresses = await ProgressService.getAllChapterProgresses();
+  Future<void> _loadData() async {
     final xp = await ProgressService.getXP();
+    final stats = <String, Map<String, dynamic>>{};
+
+    for (final lesson in widget.lessons) {
+      stats[lesson.lessonId] = await ProgressService.getLessonStats(
+        widget.chapterNumber,
+        lesson.lessonId,
+      );
+    }
+
     if (!mounted) return;
     setState(() {
-      _chapterProgresses = progresses;
       _xp = xp;
+      _lessonStats = stats;
       _isLoading = false;
     });
   }
 
-  bool _isUnlocked(ChapterData chapter) {
-    if (chapter.isComingSoon || chapter.page == null) return false;
-    return _xp >= (_chapterUnlockXp[chapter.number] ?? 0);
+  bool _isUnlocked(ChapterLessonListEntry lesson) => _xp >= lesson.requiredXp;
+
+  int get _visitedLessonsCount => widget.lessons.where((lesson) {
+        final stats =
+            _lessonStats[lesson.lessonId] ?? const <String, dynamic>{};
+        final quizBest = (stats['quizBestScore'] as int?) ?? 0;
+        final flashBest = (stats['flashcardsBestScore'] as int?) ?? 0;
+        final quizCompleted = stats['quizCompleted'] == true;
+        final flashReviewed = stats['flashcardsReviewed'] == true;
+        return quizCompleted || flashReviewed || quizBest > 0 || flashBest > 0;
+      }).length;
+
+  int? get _nextRequiredXp {
+    for (final lesson in widget.lessons) {
+      if (!_isUnlocked(lesson)) return lesson.requiredXp;
+    }
+    return null;
   }
 
   @override
@@ -79,10 +100,13 @@ class _ChaptersPageState extends State<ChaptersPage> {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
-                    child: _ChaptersHero(
-                      xp: _xp,
-                      completedChapters: _completedChaptersCount,
-                      totalChapters: _availableChapters.length,
+                    child: _LessonHero(
+                      chapterNumber: widget.chapterNumber,
+                      chapterTitleFR: widget.chapterTitleFR,
+                      chapterTitleDE: widget.chapterTitleDE,
+                      currentXp: _xp,
+                      visitedLessons: _visitedLessonsCount,
+                      totalLessons: widget.lessons.length,
                       nextRequiredXp: _nextRequiredXp,
                     ),
                   ),
@@ -91,30 +115,29 @@ class _ChaptersPageState extends State<ChaptersPage> {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final chapter = _chapters[index];
-                          final progress =
-                              _chapterProgresses[chapter.number] ?? 0;
-                          final unlocked = _isUnlocked(chapter);
+                          final lesson = widget.lessons[index];
+                          final stats = _lessonStats[lesson.lessonId] ??
+                              const <String, dynamic>{};
+                          final unlocked = _isUnlocked(lesson);
 
-                          return _ChapterListCard(
-                            chapter: chapter,
-                            progress: progress,
+                          return _LessonCard(
+                            lesson: lesson,
+                            stats: stats,
                             isUnlocked: unlocked,
-                            requiredXp: _chapterUnlockXp[chapter.number],
                             onTap: unlocked
                                 ? () async {
                                     await Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => chapter.page!,
+                                        builder: (_) => lesson.pageBuilder(),
                                       ),
                                     );
-                                    _loadProgress();
+                                    _loadData();
                                   }
                                 : null,
                           );
                         },
-                        childCount: _chapters.length,
+                        childCount: widget.lessons.length,
                       ),
                     ),
                   ),
@@ -125,32 +148,68 @@ class _ChaptersPageState extends State<ChaptersPage> {
   }
 }
 
-class _ChaptersHero extends StatelessWidget {
-  final int xp;
-  final int completedChapters;
-  final int totalChapters;
+class _LessonHero extends StatelessWidget {
+  final int chapterNumber;
+  final String chapterTitleFR;
+  final String chapterTitleDE;
+  final int currentXp;
+  final int visitedLessons;
+  final int totalLessons;
   final int? nextRequiredXp;
 
-  const _ChaptersHero({
-    required this.xp,
-    required this.completedChapters,
-    required this.totalChapters,
+  const _LessonHero({
+    required this.chapterNumber,
+    required this.chapterTitleFR,
+    required this.chapterTitleDE,
+    required this.currentXp,
+    required this.visitedLessons,
+    required this.totalLessons,
     required this.nextRequiredXp,
   });
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        totalChapters == 0 ? 0.0 : completedChapters / totalChapters;
+    final progress = totalLessons == 0 ? 0.0 : visitedLessons / totalLessons;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Chapitres',
-            style: TextStyle(
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: kBorder),
+                boxShadow: const [
+                  BoxShadow(color: kShadow, blurRadius: 10, offset: Offset(0, 3)),
+                ],
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: kInk900,
+                size: 18,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Chapitre $chapterNumber',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: kInk500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            chapterTitleFR,
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -158,12 +217,13 @@ class _ChaptersHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Parcours complet par module avec déverrouillage progressif.',
-            style: TextStyle(
+          Text(
+            chapterTitleDE,
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontSize: 13,
               color: kInk500,
+              fontStyle: FontStyle.italic,
             ),
           ),
           const SizedBox(height: 16),
@@ -208,7 +268,7 @@ class _ChaptersHero extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Progression globale · $xp XP',
+                        'Progression globale · $currentXp XP',
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 13,
@@ -219,8 +279,8 @@ class _ChaptersHero extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         nextRequiredXp == null
-                            ? 'Tous les chapitres disponibles sont déverrouillés.'
-                            : 'Encore ${nextRequiredXp! - xp} XP pour ouvrir le prochain chapitre.',
+                            ? 'Tous les cours du chapitre sont déverrouillés.'
+                            : 'Encore ${nextRequiredXp! - currentXp} XP pour débloquer le prochain cours.',
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 11,
@@ -239,7 +299,7 @@ class _ChaptersHero extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '$completedChapters/$totalChapters',
+                    '$visitedLessons/$totalLessons',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
@@ -257,33 +317,37 @@ class _ChaptersHero extends StatelessWidget {
   }
 }
 
-class _ChapterListCard extends StatelessWidget {
-  final ChapterData chapter;
-  final double progress;
+class _LessonCard extends StatelessWidget {
+  final ChapterLessonListEntry lesson;
+  final Map<String, dynamic> stats;
   final bool isUnlocked;
-  final int? requiredXp;
   final VoidCallback? onTap;
 
-  const _ChapterListCard({
-    required this.chapter,
-    required this.progress,
+  const _LessonCard({
+    required this.lesson,
+    required this.stats,
     required this.isUnlocked,
-    required this.requiredXp,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final completed = progress >= 1.0;
-    final started = progress > 0 && progress < 1.0;
-    final locked = !isUnlocked && !chapter.isComingSoon;
+    final quizCompleted = stats['quizCompleted'] == true;
+    final flashcardsReviewed = stats['flashcardsReviewed'] == true;
+    final quizBestScore = (stats['quizBestScore'] as int?) ?? 0;
+    final flashcardsBestScore = (stats['flashcardsBestScore'] as int?) ?? 0;
+    final bestScore =
+        quizBestScore > flashcardsBestScore ? quizBestScore : flashcardsBestScore;
+    final started =
+        quizCompleted || flashcardsReviewed || quizBestScore > 0 || flashcardsBestScore > 0;
+    final completed = quizCompleted && flashcardsReviewed;
     final buttonColor = _buttonColor(completed, started);
     final buttonIconColor = completed ? Colors.white : kFlagGold;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedOpacity(
-        opacity: isUnlocked || chapter.isComingSoon ? 1.0 : 0.52,
+        opacity: isUnlocked ? 1.0 : 0.52,
         duration: const Duration(milliseconds: 200),
         child: Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -291,16 +355,12 @@ class _ChapterListCard extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: completed
-                  ? chapter.accentColor.withValues(alpha: 0.35)
-                  : kBorder,
+              color: completed ? lesson.buttonColor.withValues(alpha: 0.35) : kBorder,
               width: completed ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: completed
-                    ? chapter.accentColor.withValues(alpha: 0.08)
-                    : kShadow,
+                color: completed ? lesson.buttonColor.withValues(alpha: 0.12) : kShadow,
                 blurRadius: 14,
                 offset: const Offset(0, 5),
               ),
@@ -317,15 +377,17 @@ class _ChapterListCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _ChapterStatusBadge(
-                            chapter: chapter,
-                            progress: progress,
+                          _LessonStatusBadge(
                             isUnlocked: isUnlocked,
-                            requiredXp: requiredXp,
+                            started: started,
+                            completed: completed,
+                            bestScore: bestScore,
+                            requiredXp: lesson.requiredXp,
+                            accentColor: lesson.buttonColor,
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            chapter.titleFR,
+                            lesson.title,
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 15,
@@ -336,29 +398,22 @@ class _ChapterListCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            chapter.titleDE,
-                            style: const TextStyle(
+                            isUnlocked
+                                ? 'Débloqué à ${lesson.requiredXp} XP'
+                                : 'Verrouillé jusqu’à ${lesson.requiredXp} XP',
+                            style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 11,
-                              color: kInk500,
-                              fontStyle: FontStyle.italic,
+                              color: isUnlocked ? kInk500 : kCoral,
                             ),
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            chapter.isComingSoon
-                                ? 'Ce module sera ajouté plus tard.'
-                                : locked
-                                    ? 'Déverrouillage à ${requiredXp ?? 0} XP.'
-                                    : completed
-                                        ? 'Chapitre terminé, tu peux le revoir quand tu veux.'
-                                        : started
-                                            ? 'Progression ${(progress * 100).round()}% sur ce chapitre.'
-                                            : 'Nouveau chapitre prêt à commencer.',
-                            style: TextStyle(
+                            lesson.description,
+                            style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
-                              color: locked ? kCoral : kInk700,
+                              color: kInk700,
                               height: 1.55,
                             ),
                             maxLines: 3,
@@ -371,27 +426,25 @@ class _ChapterListCard extends StatelessWidget {
                     SizedBox(
                       width: 90,
                       height: 110,
-                      child: chapter.isComingSoon || locked
-                          ? Container(
+                      child: isUnlocked
+                          ? _LessonImage(asset: lesson.image, accentColor: lesson.buttonColor)
+                          : Container(
                               margin: const EdgeInsets.only(right: 18),
                               decoration: BoxDecoration(
                                 color: kInk100,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Icon(
-                                chapter.isComingSoon
-                                    ? Icons.schedule_rounded
-                                    : Icons.lock_rounded,
+                              child: const Icon(
+                                Icons.lock_rounded,
                                 color: kInk500,
                                 size: 28,
                               ),
-                            )
-                          : _ChapterImage(chapter: chapter),
+                            ),
                     ),
                   ],
                 ),
               ),
-              if (!chapter.isComingSoon && isUnlocked)
+              if (isUnlocked)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
                   child: Container(
@@ -404,19 +457,13 @@ class _ChapterListCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          completed
-                              ? Icons.replay_rounded
-                              : Icons.play_arrow_rounded,
+                          completed ? Icons.replay_rounded : Icons.play_arrow_rounded,
                           color: buttonIconColor,
                           size: 18,
                         ),
                         const SizedBox(width: 7),
                         Text(
-                          completed
-                              ? 'Revoir le chapitre'
-                              : started
-                                  ? 'Continuer'
-                                  : 'Commencer',
+                          completed ? 'Revoir' : started ? 'Continuer' : 'Commencer',
                           style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 13,
@@ -436,64 +483,64 @@ class _ChapterListCard extends StatelessWidget {
   }
 
   Color _buttonColor(bool completed, bool started) {
-    if (completed) return chapter.accentColor;
+    if (completed) return lesson.buttonColor;
     if (started) {
-      return Color.lerp(chapter.accentColor, kFlagBlack, 0.18) ?? chapter.accentColor;
+      return Color.lerp(lesson.buttonColor, kFlagBlack, 0.18) ??
+          lesson.buttonColor;
     }
-    return Color.lerp(chapter.accentColor, Colors.white, 0.08) ?? chapter.accentColor;
+    return Color.lerp(lesson.buttonColor, Colors.white, 0.08) ??
+        lesson.buttonColor;
   }
 }
 
-class _ChapterStatusBadge extends StatelessWidget {
-  final ChapterData chapter;
-  final double progress;
+class _LessonStatusBadge extends StatelessWidget {
   final bool isUnlocked;
-  final int? requiredXp;
+  final bool started;
+  final bool completed;
+  final int bestScore;
+  final int requiredXp;
+  final Color accentColor;
 
-  const _ChapterStatusBadge({
-    required this.chapter,
-    required this.progress,
+  const _LessonStatusBadge({
     required this.isUnlocked,
+    required this.started,
+    required this.completed,
+    required this.bestScore,
     required this.requiredXp,
+    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (chapter.isComingSoon) {
-      return _pill('Bientôt', kInk500, kInk100);
-    }
-    if (!isUnlocked) {
-      return _pill('${requiredXp ?? 0} XP', kInk500, kInk100);
-    }
-    if (progress >= 1.0) {
+    if (!isUnlocked) return _pill('$requiredXp XP', kInk500, kInk100);
+    if (completed) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
-          color: chapter.accentLight,
+          color: accentColor.withValues(alpha: 0.16),
           borderRadius: BorderRadius.circular(99),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_rounded,
-                color: chapter.accentColor, size: 12),
+            Icon(Icons.check_circle_rounded, color: accentColor, size: 12),
             const SizedBox(width: 4),
             Text(
-              '100% · Terminé',
+              bestScore > 0 ? '$bestScore% · Terminé' : 'Terminé',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: chapter.accentColor,
+                color: accentColor,
               ),
             ),
           ],
         ),
       );
     }
-    if (progress > 0) {
+    if (started) {
       return _pill(
-        '${(progress * 100).round()}% · En cours',
+        bestScore > 0 ? '$bestScore% · En cours' : 'En cours',
         const Color(0xFF7A4A00),
         kPeachLight,
       );
@@ -519,26 +566,27 @@ class _ChapterStatusBadge extends StatelessWidget {
       );
 }
 
-class _ChapterImage extends StatelessWidget {
-  final ChapterData chapter;
+class _LessonImage extends StatelessWidget {
+  final String asset;
+  final Color accentColor;
 
-  const _ChapterImage({required this.chapter});
+  const _LessonImage({required this.asset, required this.accentColor});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 18),
       child: Image.asset(
-        chapter.imagePath ?? '',
+        asset,
         fit: BoxFit.contain,
         errorBuilder: (_, __, ___) => Container(
           decoration: BoxDecoration(
-            color: chapter.accentLight,
+            color: accentColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
-            chapter.icon,
-            color: chapter.accentColor,
+            Icons.menu_book_rounded,
+            color: accentColor,
             size: 30,
           ),
         ),

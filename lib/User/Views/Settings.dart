@@ -1298,14 +1298,14 @@ class _FinalExamModal extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: kFlagBlack,
+                color: kCoral,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.play_arrow_rounded,
-                      color: kFlagGold, size: 20),
+                      color: Colors.white, size: 20),
                   SizedBox(width: 8),
                   Text(
                     'Lancer l\'examen',

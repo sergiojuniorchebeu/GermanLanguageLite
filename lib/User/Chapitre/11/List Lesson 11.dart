@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/shared/widgets/lesson_list_template.dart';
+import 'package:projet2/shared/widgets/chapter_lesson_list_page.dart';
 import 'Leçon1.dart';
 
 class LessonList11Page extends StatelessWidget {
@@ -8,20 +8,24 @@ class LessonList11Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LessonListTemplate(
+    return const ChapterLessonListPage(
       chapterNumber: 11,
       chapterTitleFR: "La sortie & le transfert",
       chapterTitleDE: "Die Entlassung & Verlegung",
-      accentColor: kPeach,
-      accentLight: kPeachLight,
       lessons: [
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "Le transfert et la sortie",
-          description: "Die Verlegung und die Entlassung",
+          description:
+              "Travaillez les phrases utiles pour organiser un transfert ou une sortie.",
           image: 'assets/img/ambulance.png',
-          pageBuilder: () => const Lesson1C11Page(),
+          lessonId: "Le transfert et la sortie",
+          requiredXp: 2520,
+          buttonColor: kPeach,
+          pageBuilder: _lesson1Builder,
         ),
       ],
     );
   }
 }
+
+Widget _lesson1Builder() => const Lesson1C11Page();

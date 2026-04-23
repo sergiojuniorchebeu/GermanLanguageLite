@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/shared/widgets/lesson_list_template.dart';
+import 'package:projet2/shared/widgets/chapter_lesson_list_page.dart';
 import 'lecon1.dart';
 import 'lecon2.dart';
 import 'lecon3.dart';
@@ -10,32 +10,46 @@ class LessonList4Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LessonListTemplate(
+    return const ChapterLessonListPage(
       chapterNumber: 4,
       chapterTitleFR: "Les soins d'hygiène",
       chapterTitleDE: "Die Grundpflege",
-      accentColor: kPeach,
-      accentLight: kPeachLight,
       lessons: [
-        LessonEntry(
+        ChapterLessonListEntry(
           title: 'Les soins corporels',
-          description: "Les soins corporels signifie Die Körperpflege en allemand.",
+          description:
+              "Apprenez le vocabulaire des soins corporels et de l'hygiène quotidienne.",
           image: 'assets/img/heart.png',
-          pageBuilder: () => const Lesson1C4Page(),
+          lessonId: "Les soins corporels (m.)",
+          requiredXp: 560,
+          buttonColor: kPeach,
+          pageBuilder: _lesson1Builder,
         ),
-        LessonEntry(
-          title: "Le Materiel",
-          description: "",
+        ChapterLessonListEntry(
+          title: "Le matériel",
+          description:
+              "Identifiez le matériel utilisé pour les soins d'hygiène.",
           image: 'assets/img/scrub.png',
-          pageBuilder: () => const Lesson2C4Page(),
+          lessonId: "Le matériel",
+          requiredXp: 620,
+          buttonColor: kBlue,
+          pageBuilder: _lesson2Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "Solliciter le patient",
-          description: "Den Patienten fördern",
+          description:
+              "Travaillez les formulations pour encourager la participation du patient.",
           image: 'assets/img/advice.png',
-          pageBuilder: () => const Lesson3C4Page(),
+          lessonId: "Solliciter le patient",
+          requiredXp: 690,
+          buttonColor: kGreen,
+          pageBuilder: _lesson3Builder,
         ),
       ],
     );
   }
 }
+
+Widget _lesson1Builder() => const Lesson1C4Page();
+Widget _lesson2Builder() => const Lesson2C4Page();
+Widget _lesson3Builder() => const Lesson3C4Page();

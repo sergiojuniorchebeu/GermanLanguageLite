@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/shared/widgets/lesson_list_template.dart';
+import 'package:projet2/shared/widgets/chapter_lesson_list_page.dart';
+import 'Leçon3.dart';
 import 'leçon1.dart';
 import 'leçon2.dart';
 
@@ -9,32 +10,46 @@ class LessonList7Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LessonListTemplate(
+    return const ChapterLessonListPage(
       chapterNumber: 7,
       chapterTitleFR: "Labo – prélèvement",
       chapterTitleDE: "Labor – Entnahme",
-      accentColor: kBlue,
-      accentLight: kBlueLight,
       lessons: [
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "La prise de sang",
-          description: "Die Blutabnahme",
+          description:
+              "Travaillez les étapes et le vocabulaire de la prise de sang.",
           image: 'assets/img/blood-tube.png',
-          pageBuilder: () => const Lesson1C7Page(),
+          lessonId: "La prise de sang",
+          requiredXp: 1280,
+          buttonColor: kBlue,
+          pageBuilder: _lesson1Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "La glycémie capillaire",
-          description: "Die kapillare Blutzuckermessung",
+          description:
+              "Apprenez le matériel et les formulations liées à la glycémie capillaire.",
           image: 'assets/img/blood-vessel.png',
-          pageBuilder: () => const Lesson2C7Page(),
+          lessonId: "La glycémie capillaire",
+          requiredXp: 1360,
+          buttonColor: kGreen,
+          pageBuilder: _lesson2Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "Les valeurs sanguines",
-          description: "Die Blutwerte",
+          description:
+              "Identifiez les principales valeurs sanguines et leur interprétation de base.",
           image: 'assets/img/blood-sample.png',
-          pageBuilder: () => const Lesson2C7Page(),
+          lessonId: "Les valeurs sanguines",
+          requiredXp: 1450,
+          buttonColor: kCoral,
+          pageBuilder: _lesson3Builder,
         ),
       ],
     );
   }
 }
+
+Widget _lesson1Builder() => const Lesson1C7Page();
+Widget _lesson2Builder() => const Lesson2C7Page();
+Widget _lesson3Builder() => const Lesson3C7Page();

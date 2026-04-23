@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/shared/widgets/lesson_list_template.dart';
+import 'package:projet2/shared/widgets/chapter_lesson_list_page.dart';
 import 'leçon1.dart';
 import 'leçon2.dart';
 
@@ -9,26 +9,35 @@ class LessonList6Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LessonListTemplate(
+    return const ChapterLessonListPage(
       chapterNumber: 6,
       chapterTitleFR: "Les examens complémentaires",
       chapterTitleDE: "Die Untersuchungen",
-      accentColor: kYellow,
-      accentLight: kYellowLight,
       lessons: [
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "Les examens généraux",
-          description: "Die allgemeinen Untersuchungen",
+          description:
+              "Travaillez le vocabulaire des examens courants et des consignes associées.",
           image: 'assets/img/examination.png',
-          pageBuilder: () => const Lesson1C6Page(),
+          lessonId: "Les examens généraux",
+          requiredXp: 1020,
+          buttonColor: kYellow,
+          pageBuilder: _lesson1Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "La coronarographie",
-          description: "Die Koronarangiographie",
+          description:
+              "Apprenez la préparation, le déroulement et la surveillance liés à la coronarographie.",
           image: 'assets/img/machine.png',
-          pageBuilder: () => const Lesson2C6Page(),
+          lessonId: "La coronarographie",
+          requiredXp: 1100,
+          buttonColor: kBlue,
+          pageBuilder: _lesson2Builder,
         ),
       ],
     );
   }
 }
+
+Widget _lesson1Builder() => const Lesson1C6Page();
+Widget _lesson2Builder() => const Lesson2C6Page();

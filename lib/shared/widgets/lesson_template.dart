@@ -141,70 +141,80 @@ class _LessonTemplateState extends State<LessonTemplate> {
 
   // ── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-      decoration: const BoxDecoration(
-        color: kFlagBlack,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Bouton retour
           GestureDetector(
             onTap: _handleExit,
             child: Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
-                ),
+                border: Border.all(color: kBorder),
+                boxShadow: const [
+                  BoxShadow(color: kShadow, blurRadius: 10, offset: Offset(0, 3)),
+                ],
               ),
               child: const Icon(
                 Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
+                color: kInk900,
                 size: 18,
               ),
             ),
           ),
-          const SizedBox(height: 22),
-
-          // Tags
-          Row(
-            children: [
-              _HeaderTag(
-                label: 'Ch. ${widget.chapterNumber}',
-                textColor: kFlagGold,
-                bgColor: kFlagGold.withValues(alpha: 0.15),
-                borderColor: kFlagGold.withValues(alpha: 0.35),
-              ),
-              const SizedBox(width: 8),
-              _HeaderTag(
-                label: 'Allemand médical',
-                textColor: Colors.white.withValues(alpha: 0.7),
-                bgColor: Colors.white.withValues(alpha: 0.07),
-                borderColor: Colors.white.withValues(alpha: 0.1),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Titre de la leçon
-          Text(
-            widget.title,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
+          const SizedBox(height: 18),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
               color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              height: 1.3,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: kBorder),
+              boxShadow: const [
+                BoxShadow(color: kShadow, blurRadius: 12, offset: Offset(0, 4)),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _HeaderTag(
+                      label: 'Ch. ${widget.chapterNumber}',
+                      textColor: widget.accentColor,
+                      bgColor: widget.accentLight,
+                      borderColor: widget.accentColor.withValues(alpha: 0.2),
+                    ),
+                    const SizedBox(width: 8),
+                    _HeaderTag(
+                      label: 'Allemand médical',
+                      textColor: kInk600,
+                      bgColor: kInk100,
+                      borderColor: kBorder,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    color: kInk900,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${widget.examples.length} expressions à travailler dans cette leçon.',
+                  style: AppText.bodyS.copyWith(color: kInk500, height: 1.45),
+                ),
+              ],
             ),
           ),
         ],
@@ -232,8 +242,9 @@ class _LessonTemplateState extends State<LessonTemplate> {
                   icon: Icons.quiz_outlined,
                   label: 'Quiz',
                   status: quizCompleted ? 'Réussi · $quizBestScore%' : null,
-                  backgroundColor: widget.accentLight,
+                  backgroundColor: Colors.white,
                   foregroundColor: widget.accentColor,
+                  borderColor: widget.accentColor.withValues(alpha: 0.18),
                   onTap: widget.examples.length < 2
                       ? null
                       : () => Navigator.push(
@@ -258,7 +269,7 @@ class _LessonTemplateState extends State<LessonTemplate> {
                   status: flashcardsReviewed
                       ? 'Révisé · $flashcardsBestScore%'
                       : null,
-                  backgroundColor: Colors.white,
+                  backgroundColor: widget.accentLight.withValues(alpha: 0.45),
                   foregroundColor: kInk800,
                   borderColor: kBorder,
                   onTap: widget.examples.isEmpty
@@ -289,31 +300,46 @@ class _LessonTemplateState extends State<LessonTemplate> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: kBorder),
+          boxShadow: const [
+            BoxShadow(color: kShadow, blurRadius: 10, offset: Offset(0, 3)),
+          ],
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 4,
-              height: 40,
-              margin: const EdgeInsets.only(right: 12, top: 2),
-              decoration: BoxDecoration(
-                color: widget.accentColor,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                widget.content!,
-                style: AppText.bodyM.copyWith(
-                  color: kInk700,
-                  height: 1.6,
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: widget.accentLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.lightbulb_outline_rounded,
+                    color: widget.accentColor,
+                    size: 18,
+                  ),
                 ),
+                const SizedBox(width: 10),
+                Text(
+                  'À retenir',
+                  style: AppText.labelL.copyWith(color: kInk900),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              widget.content!,
+              style: AppText.bodyM.copyWith(
+                color: kInk700,
+                height: 1.6,
               ),
             ),
           ],
@@ -381,13 +407,13 @@ class _PhraseCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: kBorder),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: accentColor.withOpacity(0.05),
+            color: kShadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -452,7 +478,7 @@ class _PhraseCard extends StatelessWidget {
           ),
 
           // ── Séparateur ────────────────────────────────────────────────
-          Divider(height: 1, color: kBorder),
+          const Divider(height: 1, color: kBorder),
 
           // ── Bloc français ────────────────────────────────────────────
           Padding(
@@ -546,22 +572,28 @@ class _ActionChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(color: borderColor),
+            boxShadow: const [
+              BoxShadow(color: kShadow, blurRadius: 8, offset: Offset(0, 2)),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 18, color: foregroundColor),
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: AppText.labelM.copyWith(color: foregroundColor),
-                  ),
-                ],
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: foregroundColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: foregroundColor),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: AppText.labelM.copyWith(color: foregroundColor),
               ),
               if (status != null) ...[
                 const SizedBox(height: 4),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projet2/core/theme/colors.dart';
-import 'package:projet2/shared/widgets/lesson_list_template.dart';
+import 'package:projet2/shared/widgets/chapter_lesson_list_page.dart';
 import 'leçon1.dart';
 import 'leçon2.dart';
 import 'leçon3.dart';
@@ -11,38 +11,57 @@ class LessonList9Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LessonListTemplate(
+    return const ChapterLessonListPage(
       chapterNumber: 9,
       chapterTitleFR: "Les soins thérapeutiques",
       chapterTitleDE: "Die Behandlungspflege",
-      accentColor: kPurple,
-      accentLight: kPurpleLight,
       lessons: [
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "La perfusion",
-          description: "Die Infusion",
+          description:
+              "Apprenez le vocabulaire des perfusions et des manipulations associées.",
           image: 'assets/img/saline.png',
-          pageBuilder: () => const Lesson1C9Page(),
+          lessonId: "La perfusion",
+          requiredXp: 1860,
+          buttonColor: kPurple,
+          pageBuilder: _lesson1Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "La sonde urinaire",
-          description: "Der Blasenkatheter",
+          description:
+              "Travaillez les échanges autour de la sonde urinaire et de sa surveillance.",
           image: 'assets/img/medical.png',
-          pageBuilder: () => const Lesson2C9Page(),
+          lessonId: "La sonde urinaire",
+          requiredXp: 1940,
+          buttonColor: kBlue,
+          pageBuilder: _lesson2Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "Les voies d'administration des médicaments",
-          description: "Die Verabreichungswege von Medikamenten",
+          description:
+              "Identifiez les différentes voies d'administration des médicaments.",
           image: 'assets/img/schedule.png',
-          pageBuilder: () => const Lesson3C9Page(),
+          lessonId: "Les voies d'administration des médicaments",
+          requiredXp: 2030,
+          buttonColor: kGreen,
+          pageBuilder: _lesson3Builder,
         ),
-        LessonEntry(
+        ChapterLessonListEntry(
           title: "La préparation et la distribution des médicaments",
-          description: "Die Zubereitung und Verteilung von Medikamenten",
+          description:
+              "Apprenez les formulations liées à la préparation et à la distribution des médicaments.",
           image: 'assets/img/calendar.png',
-          pageBuilder: () => const Lesson4C9Page(),
+          lessonId: "La préparation et la distribution des médicaments",
+          requiredXp: 2130,
+          buttonColor: kCoral,
+          pageBuilder: _lesson4Builder,
         ),
       ],
     );
   }
 }
+
+Widget _lesson1Builder() => const Lesson1C9Page();
+Widget _lesson2Builder() => const Lesson2C9Page();
+Widget _lesson3Builder() => const Lesson3C9Page();
+Widget _lesson4Builder() => const Lesson4C9Page();

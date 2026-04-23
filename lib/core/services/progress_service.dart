@@ -581,6 +581,61 @@ class ProgressService {
     );
   }
 
+  // ── Cas cliniques ───────────────────────────────────────────────────────
+
+  static String _clinicalCaseBestScoreKey(String caseId) =>
+      'clinical_case_${caseId}_best_score';
+
+  static String _clinicalCaseCompletedKey(String caseId) =>
+      'clinical_case_${caseId}_completed';
+
+  static Future<int> getClinicalCaseBestScore(String caseId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_clinicalCaseBestScoreKey(caseId)) ?? 0;
+  }
+
+  static Future<Map<String, int>> getClinicalCaseBestScores() async {
+    final prefs = await SharedPreferences.getInstance();
+    final scores = <String, int>{};
+    for (final key in prefs.getKeys()) {
+      if (key.startsWith('clinical_case_') && key.endsWith('_best_score')) {
+        final caseId = key
+            .replaceFirst('clinical_case_', '')
+            .replaceFirst('_best_score', '');
+        scores[caseId] = prefs.getInt(key) ?? 0;
+      }
+    }
+    return scores;
+  }
+
+  static Future<int> completeClinicalCase(
+    String caseId,
+    int score, {
+    required int passingScore,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final bestKey = _clinicalCaseBestScoreKey(caseId);
+    final completedKey = _clinicalCaseCompletedKey(caseId);
+    final currentBest = prefs.getInt(bestKey) ?? 0;
+
+    if (score > currentBest) {
+      await prefs.setInt(bestKey, score);
+    }
+
+    var xpGained = 0;
+    if (score >= passingScore) {
+      final alreadyCompleted = prefs.getBool(completedKey) ?? false;
+      if (!alreadyCompleted) {
+        xpGained = 25;
+        await _addXP(xpGained);
+        await prefs.setBool(completedKey, true);
+      }
+      await updateStreak();
+    }
+
+    return xpGained;
+  }
+
   // ── Reset ────────────────────────────────────────────────────────────────
 
   static Future<void> resetAll() async {
@@ -594,6 +649,9 @@ class ProgressService {
         await prefs.remove(key);
       }
       if (key.startsWith('weekly_') || key.startsWith('session_')) {
+        await prefs.remove(key);
+      }
+      if (key.startsWith('clinical_case_')) {
         await prefs.remove(key);
       }
     }
